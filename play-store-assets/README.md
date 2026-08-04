@@ -1,6 +1,6 @@
 # Ressources Google Play — VueConfort 1.0.0
 
-Ce dossier contient les ressources préparées pour Google Play Console à partir du logo officiel fourni le 4 août 2026. Le développement applicatif n’a pas été modifié.
+Ce dossier contient les ressources préparées pour Google Play Console à partir du logo officiel fourni le 4 août 2026 et de captures réelles réalisées le même jour sur un Galaxy S25 SM-S931B. Deux corrections purement visuelles ont été appliquées avant les captures ; aucun comportement métier n’a été modifié.
 
 ## Icônes
 
@@ -31,20 +31,22 @@ Copier chaque section dans le champ correspondant de la fiche principale Google 
 
 La vidéo doit être filmée sur un Galaxy S25 réel, téléversée en mode non répertorié, puis fournie dans la déclaration Accessibility API. Elle doit montrer la divulgation préalable, le consentement Android, l’overlay, le grossissement et la fonction Lire.
 
-## Captures téléphone
+## Captures téléphone réelles
 
-Le dossier `screenshots/` est volontairement vide : aucun Galaxy S25 ni émulateur n’était connecté pendant la préparation, et aucune capture existante exploitable n’a été trouvée. Aucune fausse interface n’a été créée.
+Les dix PNG du dossier `screenshots/` proviennent exclusivement du Galaxy S25 SM-S931B connecté par ADB. Ils sont en français, non recadrés et conservent la définition native 1080 × 2340. Aucun mockup, texte injecté ou écran artificiel n’a été utilisé.
 
-Créer en français, au format portrait 1080 × 1920 :
+La sélection recommandée pour la fiche Play Store est :
 
 1. `01_accueil.png` — accueil/tableau de bord ;
-2. `02_barre_flottante.png` — barre utilisée dans Chrome, sans donnée personnelle ;
-3. `03_grossissement.png` — overlay et commandes +/− ;
-4. `04_profils.png` — liste et paramètres des profils ;
-5. `05_lecteur.png` — lecteur adapté ;
-6. `06_tests_visuels.png` — écran principal des tests.
+2. `02_barre_flottante_chrome.png` — panneau `TYPE_ACCESSIBILITY_OVERLAY` dans Chrome ;
+3. `03_grossissement.png` — grossissement Android actif à 2× et commandes +/− ;
+4. `04_profils.png` — profils ;
+5. `05_reglages_visuels.png` — réglages optiques ;
+6. `06_lecteur_adapte.png` — lecteur adapté ;
+7. `07_tests_visuels.png` — tests visuels ;
+8. `08_regles_automatiques.png` — règles automatiques.
 
-Procédure conseillée : connecter le Galaxy S25 par ADB, exécuter `adb exec-out screencap -p > fichier.png`, puis recadrer uniquement la barre système si nécessaire sans modifier l’interface. Vérifier chaque capture avant import : 1080 × 1920, français, aucun nom, e-mail, notification personnelle, URL privée ou autre donnée personnelle.
+`09_comparaison.png` et `10_accessibility_disclosure.png` sont conservées comme captures complémentaires et preuves de conformité. Voir `screenshots/README.md` pour la traçabilité.
 
 ## Import Play Console
 

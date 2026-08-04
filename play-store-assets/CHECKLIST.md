@@ -17,7 +17,7 @@
 - [x] Sources d’icône applicative préparées
 - [x] Feature Graphic 1024 × 500 préparée
 - [ ] Remplacer l’icône système du binaire par l’icône applicative validée lors d’une prochaine version autorisée
-- [ ] Captures d’écran téléphone réelles en français
+- [x] Captures d’écran téléphone réelles en français (Galaxy S25 SM-S931B)
 - [x] Texte court FR
 - [x] Description courte FR
 - [x] Description longue FR
@@ -49,7 +49,7 @@
 - [ ] AAB importé dans la piste Test interne
 - [ ] Déploiement du test interne
 - [ ] Installation depuis Google Play sur Galaxy S25
-- [ ] Test onboarding, notification, service, overlay, lecteur et profils
+- [x] Test local Release : onboarding, notification, service, overlay, grossissement, lecteur et profils
 - [ ] Test verrouillage/déverrouillage et veille One UI
 - [ ] Test fermé si requis pour l’accès à la production
 - [ ] Publication production après validation

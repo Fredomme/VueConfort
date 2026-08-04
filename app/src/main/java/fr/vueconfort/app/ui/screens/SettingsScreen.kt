@@ -8,6 +8,7 @@ import android.hardware.SensorManager
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import fr.vueconfort.app.R
 import fr.vueconfort.app.magnifier.ScreenMagnifierService
@@ -138,9 +140,9 @@ fun SettingsScreen(
                             Text("Dernière application : ${DateFormat.getDateTimeInstance().format(Date(status.lastAppliedMillis))}")
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            OutlinedButton(onClick = { onPauseAutomation(15 * 60_000L) }, modifier = Modifier.weight(1f)) { Text("15 min") }
-                            OutlinedButton(onClick = { onPauseAutomation(60 * 60_000L) }, modifier = Modifier.weight(1f)) { Text("1 heure") }
-                            OutlinedButton(onClick = { onPauseAutomation(null) }, modifier = Modifier.weight(1f)) { Text("Manuel") }
+                            OutlinedButton(onClick = { onPauseAutomation(15 * 60_000L) }, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 4.dp)) { Text("15 min", fontSize = 14.sp, maxLines = 1) }
+                            OutlinedButton(onClick = { onPauseAutomation(60 * 60_000L) }, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 4.dp)) { Text("1 heure", fontSize = 14.sp, maxLines = 1) }
+                            OutlinedButton(onClick = { onPauseAutomation(null) }, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 4.dp)) { Text("Manuel", fontSize = 14.sp, maxLines = 1) }
                         }
                         Button(onClick = { onPauseAutomation(0L) }, modifier = Modifier.fillMaxWidth()) {
                             Text("Reprendre les automatismes")
@@ -161,12 +163,13 @@ fun SettingsScreen(
                             AutomationTrigger.entries.forEach { value ->
                                 OutlinedButton(
                                     onClick = { trigger = value },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    contentPadding = PaddingValues(horizontal = 4.dp)
                                 ) { Text(when (value) {
                                     AutomationTrigger.APPLICATION -> "Application"
                                     AutomationTrigger.TIME_RANGE -> "Heure"
                                     AutomationTrigger.AMBIENT_LIGHT -> "Lumière"
-                                }) }
+                                }, fontSize = 14.sp, maxLines = 1) }
                             }
                         }
                         if (trigger == AutomationTrigger.APPLICATION && apps.isNotEmpty()) {

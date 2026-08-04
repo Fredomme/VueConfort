@@ -26,12 +26,12 @@ fun BeforeAfterComparison(settings: OpticalSettings, modifier: Modifier = Modifi
     var split by remember { mutableFloatStateOf(0.5f) }
     var width by remember { mutableFloatStateOf(1f) }
     val sample: @Composable (Modifier, String) -> Unit = { childModifier, label ->
-        Box(childModifier.background(Color(0xFFF5F3ED)).padding(12.dp)) {
+        Box(childModifier.background(Color(0xFFF5F3ED)).padding(10.dp)) {
             Text(
                 "$label\nAa 123 — Il1 O0\nLire un petit texte confortablement.",
                 color = Color(0xFF181818),
-                fontSize = 18.sp,
-                lineHeight = 25.sp,
+                fontSize = 16.sp,
+                lineHeight = 22.sp,
                 fontWeight = FontWeight.Medium
             )
         }
