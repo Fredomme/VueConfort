@@ -1,0 +1,38 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { home, languages, routes, ui, type Lang } from '../../content/site';
+export function getStaticPaths(){ return languages.map((lang)=>({params:{lang},props:{lang}})); }
+const { lang } = Astro.props as {lang:Lang};
+const t=ui[lang], h=home[lang];
+const features = lang==='fr' ? [
+  ['Tests visuels','Landolt C, E directionnel, contraste et Amsler avec calibration et historique local.'],
+  ['Profils intelligents','Des réglages adaptés à la lecture, aux petits textes, à l’extérieur et à vos préférences.'],
+  ['Lecteur VueConfort','Une présentation réglable du texte, sans capture d’écran ni envoi vers un serveur.']
+] : [
+  ['Visual tests','Landolt C, directional E, contrast and Amsler with calibration and on-device history.'],
+  ['Smart profiles','Settings adapted to reading, small text, outdoors and your own preferences.'],
+  ['VueConfort Reader','Adjustable text presentation, with no screenshot or server transfer.']
+];
+---
+<BaseLayout lang={lang} title={h.title} description={h.description}>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <p class="eyebrow">{lang==='fr'?'Confort visuel sur mobile':'Visual comfort on mobile'}</p>
+        <h1>{h.title}</h1><h2>{h.subtitle}</h2><p class="lead">{h.intro}</p>
+        <div class="actions">
+          <a class="button primary" href={`/${lang}/${routes[lang].telechargement}/#android`}>{t.android}</a>
+          <a class="button secondary" href={`/${lang}/${routes[lang].telechargement}/#iphone`}>{t.iphone}</a>
+          <a class="button ghost" href="#decouvrir">{t.discover}</a>
+        </div>
+      </div>
+      <div class="visual-stage" aria-label={lang==='fr'?'Aperçu stylisé du lecteur VueConfort':'Stylised preview of VueConfort Reader'}>
+        <span class="orb a" aria-hidden="true"></span><span class="orb b" aria-hidden="true"></span>
+        <div class="phone" aria-hidden="true"><span class="phone-notch"></span><div class="phone-screen"><strong>VueConfort</strong><div class="sample-bar"></div><div class="sample-bar short"></div><div class="reader-card"><strong>{lang==='fr'?'Lire confortablement':'Read comfortably'}</strong><p>{lang==='fr'?'Une taille adaptée, un interligne stable et des réglages qui restent sur votre appareil.':'Adapted sizing, stable line spacing and settings that stay on your device.'}</p><div class="sample-bar"></div><div class="sample-bar short"></div></div></div></div>
+      </div>
+    </div>
+  </section>
+  <section class="trust-strip"><div class="container trust-grid"><div class="trust-item">{t.local}</div><div class="trust-item">{t.noTracking}</div><div class="trust-item">{t.accessible}</div></div></section>
+  <section class="section soft" id="decouvrir"><div class="container"><div class="section-head"><h2>{lang==='fr'?'Pensé pour mieux lire, pas pour mieux suivre.':'Designed for better reading, not better tracking.'}</h2><p>{lang==='fr'?'Chaque fonction répond à un besoin concret et respecte les protections de votre téléphone.':'Every feature answers a practical need and respects your phone’s protections.'}</p></div><div class="grid-3">{features.map(([title,body],i)=><article class="card"><span class="number">0{i+1}</span><h3>{title}</h3><p>{body}</p></article>)}</div></div></section>
+  <section class="section"><div class="container"><div class="section-head"><h2>{lang==='fr'?'Vos données ne deviennent jamais notre produit.':'Your data never becomes our product.'}</h2><p>{lang==='fr'?'Pas de compte, pas de serveur, pas de publicité, pas d’analytics. Le site lui-même n’utilise aucun cookie ni tracker.':'No account, server, advertising or analytics. This website itself uses no cookie or tracker.'}</p></div><div class="actions"><a class="button primary" href={`/${lang}/${routes[lang].confidentialite}/`}>{t.privacy}</a><a class="button secondary" href={`/${lang}/${routes[lang].fonctionnalites}/`}>{t.learn}</a></div><div class="notice">{t.disclaimer}</div></div></section>
+</BaseLayout>

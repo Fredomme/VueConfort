@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { languages, pages, routes, slugs, ui, type Lang, type Slug } from '../../content/site';
+export function getStaticPaths(){return languages.flatMap((lang)=>slugs.map((key)=>({params:{lang,slug:routes[lang][key]},props:{lang,key}})));}
+const {lang,key}=Astro.props as {lang:Lang;key:Slug};
+const page=pages[lang][key],t=ui[lang];
+const isDownload=key==='telechargement', isContact=key==='contact';
+const faqSchema = key==='faq' ? {'@context':'https://schema.org','@type':'FAQPage',mainEntity:page.sections.map(s=>({'@type':'Question',name:s.title,acceptedAnswer:{'@type':'Answer',text:s.body}}))} : null;
+---
+<BaseLayout lang={lang} title={page.title} description={page.description} slug={key}>
+  {faqSchema && <script is:inline type="application/ld+json" set:html={JSON.stringify(faqSchema)} />}
+  <section class="page-hero"><div class="container"><p class="eyebrow">{page.eyebrow}</p><h1>{page.title}</h1><p class="lead">{page.intro}</p></div></section>
+  {isDownload ? <section class="container download-grid">
+    {page.sections.slice(0,2).map((section,i)=><article class="card store-card" id={i===0?'android':'iphone'}><span class="number">{i===0?'ANDROID':'iPHONE'}</span><h2>{section.title}</h2><p>{section.body}</p><div class="actions"><a class="button primary" href={`mailto:contact@vueconfort.fr?subject=${encodeURIComponent(i===0?'VueConfort Android':'VueConfort iPhone')}`}>{t.notify}</a></div></article>)}
+    <article class="notice" style="grid-column:1/-1"><strong>{page.sections[2].title}</strong><br />{page.sections[2].body}</article>
+  </section> : <section class="container content-grid">
+    {page.sections.map((section,i)=><article class="card"><span class="number">{String(i+1).padStart(2,'0')}</span><h2>{section.title}</h2><p>{section.body}</p>{section.points&&<ul class="points">{section.points.map(point=><li>{point}</li>)}</ul>}</article>)}
+  </section>}
+  {isContact && <section class="container">
+    <form class="contact-form" id="contact-form">
+      <div class="field"><label for="contact-type">{lang==='fr'?'Objet':'Topic'}</label><select id="contact-type" name="topic"><option value="contact@vueconfort.fr">{lang==='fr'?'Question générale':'General enquiry'}</option><option value="support@vueconfort.fr">Support</option><option value="privacy@vueconfort.fr">{lang==='fr'?'Confidentialité':'Privacy'}</option></select></div>
+      <div class="field"><label for="contact-subject">{lang==='fr'?'Sujet':'Subject'}</label><input id="contact-subject" name="subject" required maxlength="120" autocomplete="off" /></div>
+      <div class="field"><label for="contact-message">Message</label><textarea id="contact-message" name="message" required maxlength="3000"></textarea></div>
+      <button class="button primary" type="submit">{lang==='fr'?'Ouvrir mon logiciel de messagerie':'Open my email app'}</button>
+      <p>{lang==='fr'?'Aucune donnée n’est transmise à ce site. Votre application de messagerie prend le relais.':'No data is sent to this website. Your email application takes over.'}</p>
+    </form>
+    <script is:inline>
+      document.getElementById('contact-form')?.addEventListener('submit',(event)=>{event.preventDefault();const f=event.currentTarget;const to=f.elements.topic.value;const subject=encodeURIComponent(f.elements.subject.value);const body=encodeURIComponent(f.elements.message.value);location.href=`mailto:${to}?subject=${subject}&body=${body}`;});
+    </script>
+  </section>}
+  {key==='tests-visuels' && <section class="container"><div class="notice">{t.disclaimer}</div></section>}
+</BaseLayout>

@@ -1,0 +1,9 @@
+{
+  "profileVersion": 1,
+  "deviceFamily": "Samsung Galaxy S25",
+  "textScale": 1.2,
+  "fontWeight": "semibold",
+  "lineHeightMultiplier": 1.35,
+  "appearance": "softLight",
+  "contrast": "enhanced"
+}

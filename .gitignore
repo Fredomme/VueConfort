@@ -1,0 +1,88 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+captures/
+.navigation/
+
+# Gradle / Kotlin / Android generated files
+.gradle/
+.kotlin/
+**/build/
+build/
+bin/
+gen/
+obj/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+*.hprof
+lint/intermediates/
+
+# Local Android configuration
+local.properties
+sdk.dir
+ndk.dir
+
+# Signing secrets and private keys
+keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.cer
+*.crt
+keys/
+
+# Environment variables and credentials
+.env
+.env.*
+!.env.example
+*.secrets
+credentials.json
+service-account*.json
+
+# Website dependencies, caches and generated output
+node_modules/
+**/node_modules/
+website/.astro/
+website/dist/
+.astro/
+dist/
+.vercel/
+.wrangler/
+.cloudflare/
+.cache/
+.parcel-cache/
+.vite/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Temporary files and local backups
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.tmp/
+tmp/
+.vueconfort-backup-*/
+*.backup-*
