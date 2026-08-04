@@ -48,9 +48,11 @@ internal class GpuProjectionRenderer(
     private var textureLocation = 0
     private var matrixLocation = 0
     private var samplerLocation = 0
+    private val uniformLocations = mutableMapOf<String, Int>()
     @Volatile private var zoom = 2f
     @Volatile private var sourceOffsetX = 0f
     @Volatile private var sourceOffsetY = 0f
+    @Volatile private var optical = OpticalGpuParameters()
 
     private val vertexBuffer = floatBuffer(floatArrayOf(-1f, -1f, 1f, -1f, -1f, 1f, 1f, 1f))
     private val textureBuffer = floatBuffer(FloatArray(8))
@@ -75,6 +77,7 @@ internal class GpuProjectionRenderer(
         sourceOffsetY = (sourceOffsetY + dy).coerceIn(-0.20f, 0.20f)
     }
     fun recenter() { sourceOffsetX = 0f; sourceOffsetY = 0f }
+    fun setOptical(value: OpticalGpuParameters) { optical = value.sanitized() }
 
     private fun initEgl() {
         eglDisplay = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
@@ -100,6 +103,10 @@ internal class GpuProjectionRenderer(
         textureLocation = GLES20.glGetAttribLocation(program, "aTexCoord")
         matrixLocation = GLES20.glGetUniformLocation(program, "uTextureMatrix")
         samplerLocation = GLES20.glGetUniformLocation(program, "uTexture")
+        listOf("uTexel", "uOpticalEnabled", "uBrightness", "uContrast", "uGamma", "uSaturation",
+            "uTemperature", "uWhiteReduction", "uSharpness", "uDirectional", "uAxis",
+            "uStretch", "uCylinder", "uIntensity", "uHaloLimit", "uThreshold", "uRegularization")
+            .forEach { uniformLocations[it] = GLES20.glGetUniformLocation(program, it) }
     }
 
     private fun createInputTexture() {
@@ -156,6 +163,7 @@ internal class GpuProjectionRenderer(
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, inputTextureId)
         GLES20.glUniform1i(samplerLocation, 0)
+        applyOpticalUniforms(optical)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
         EGL14.eglSwapBuffers(eglDisplay, eglSurface)
 
@@ -171,6 +179,19 @@ internal class GpuProjectionRenderer(
             windowStartedAt = now
         }
         if (frames == 1L || frames % 120L == 0L) emitMetrics(now)
+    }
+
+    private fun applyOpticalUniforms(value: OpticalGpuParameters) {
+        fun f(name: String, v: Float) = GLES20.glUniform1f(uniformLocations.getValue(name), v)
+        GLES20.glUniform2f(uniformLocations.getValue("uTexel"), 1f / captureWidth, 1f / captureHeight)
+        f("uOpticalEnabled", if (value.enabled) 1f else 0f)
+        f("uBrightness", value.brightness); f("uContrast", value.contrast); f("uGamma", value.gamma)
+        f("uSaturation", value.saturation); f("uTemperature", value.temperature); f("uWhiteReduction", value.whiteReduction)
+        f("uSharpness", value.sharpness); f("uDirectional", value.directionalStrength)
+        f("uAxis", Math.toRadians(value.axisDegrees.toDouble()).toFloat())
+        GLES20.glUniform2f(uniformLocations.getValue("uStretch"), value.horizontalStretch, value.verticalStretch)
+        f("uCylinder", value.cylindricalDistortion); f("uIntensity", value.globalIntensity)
+        f("uHaloLimit", value.haloLimit); f("uThreshold", value.threshold); f("uRegularization", value.regularization)
     }
 
     private fun emitMetrics(now: Long = SystemClock.elapsedRealtime()) {
@@ -237,7 +258,40 @@ internal class GpuProjectionRenderer(
             precision mediump float;
             uniform samplerExternalOES uTexture;
             varying vec2 vTexCoord;
-            void main() { gl_FragColor = texture2D(uTexture, vTexCoord); }
+            uniform vec2 uTexel;
+            uniform float uOpticalEnabled, uBrightness, uContrast, uGamma, uSaturation;
+            uniform float uTemperature, uWhiteReduction, uSharpness, uDirectional, uAxis;
+            uniform vec2 uStretch;
+            uniform float uCylinder, uIntensity, uHaloLimit, uThreshold, uRegularization;
+            void main() {
+                vec2 centered = vTexCoord - vec2(0.5);
+                float ca = cos(uAxis), sa = sin(uAxis);
+                vec2 rotated = vec2(ca*centered.x-sa*centered.y, sa*centered.x+ca*centered.y);
+                rotated /= uStretch;
+                rotated.y += uCylinder * rotated.x * rotated.x;
+                vec2 uv = vec2(ca*rotated.x+sa*rotated.y, -sa*rotated.x+ca*rotated.y) + vec2(0.5);
+                vec4 original = texture2D(uTexture, uv);
+                if (uOpticalEnabled < 0.5) { gl_FragColor = original; return; }
+                vec3 n = texture2D(uTexture, uv + vec2(0.0, -uTexel.y)).rgb;
+                vec3 s = texture2D(uTexture, uv + vec2(0.0, uTexel.y)).rgb;
+                vec3 e = texture2D(uTexture, uv + vec2(uTexel.x, 0.0)).rgb;
+                vec3 w = texture2D(uTexture, uv + vec2(-uTexel.x, 0.0)).rgb;
+                vec3 detail = original.rgb - (n+s+e+w)*0.25;
+                float magnitude = max(max(abs(detail.r), abs(detail.g)), abs(detail.b));
+                detail *= smoothstep(uThreshold, uThreshold + 0.03, magnitude);
+                detail = clamp(detail, vec3(-uHaloLimit), vec3(uHaloLimit));
+                vec2 direction = vec2(cos(uAxis), sin(uAxis)) * uTexel;
+                vec3 along = (texture2D(uTexture, uv-direction).rgb + texture2D(uTexture, uv+direction).rgb)*0.5;
+                vec3 directional = clamp(original.rgb-along, vec3(-uHaloLimit), vec3(uHaloLimit));
+                vec3 rgb = original.rgb + detail*uSharpness*(1.0-uRegularization) + directional*uDirectional*(1.0-uRegularization);
+                rgb = (rgb-0.5)*uContrast+0.5;
+                rgb = pow(max(rgb, vec3(0.0)), vec3(1.0/uGamma));
+                float luma = dot(rgb, vec3(0.2126,0.7152,0.0722));
+                rgb = mix(vec3(luma), rgb, uSaturation);
+                rgb *= vec3(1.0+uTemperature, 1.0, 1.0-uTemperature);
+                rgb *= uBrightness * (1.0-uWhiteReduction*smoothstep(0.55,1.0,luma));
+                gl_FragColor = vec4(mix(original.rgb, clamp(rgb,0.0,1.0), uIntensity), original.a);
+            }
         """
     }
 }

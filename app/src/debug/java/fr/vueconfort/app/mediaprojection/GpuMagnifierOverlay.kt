@@ -24,6 +24,7 @@ internal class GpuMagnifierOverlay(
     private val onClose: () -> Unit,
     private val onPauseChanged: (Boolean) -> Unit,
     private val onZoomChanged: (Float) -> Unit,
+    private val onOpticalChanged: (OpticalGpuParameters) -> Unit,
     private val onMoveSource: (Float, Float) -> Unit,
     private val onRecenter: () -> Unit
 ) {
@@ -35,6 +36,13 @@ internal class GpuMagnifierOverlay(
     private var locked = true
     private var zoom = preferences.getFloat("zoom", 2f).coerceIn(1.25f, 5f)
     private var windowFraction = preferences.getFloat("window_fraction", 0.5f).coerceIn(0.2f, 0.75f)
+    private var optical = OpticalGpuParameters(
+        enabled = preferences.getBoolean("optical_enabled", true),
+        sharpness = preferences.getFloat("optical_sharpness", 0.18f),
+        contrast = preferences.getFloat("optical_contrast", 1.08f),
+        directionalStrength = preferences.getFloat("optical_directional", 0.08f),
+        axisDegrees = preferences.getFloat("optical_axis", 0f)
+    ).sanitized()
     private var initialHeight = 0
     private lateinit var scaleDetector: ScaleGestureDetector
 
@@ -94,6 +102,22 @@ internal class GpuMagnifierOverlay(
         }
         container.addView(sourceControls, FrameLayout.LayoutParams(-1, dp(46), Gravity.BOTTOM))
 
+        val opticalControls = LinearLayout(service).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setBackgroundColor(0xC0183038.toInt())
+            addView(button(if (optical.enabled) "A/B : corrigé" else "A/B : original") {
+                optical = optical.copy(enabled = !optical.enabled); text = if (optical.enabled) "A/B : corrigé" else "A/B : original"; updateOptical()
+            }, weight(1.5f))
+            addView(button("Netteté −") { optical = optical.copy(sharpness = optical.sharpness - 0.05f); updateOptical() }, weight())
+            addView(button("Netteté +") { optical = optical.copy(sharpness = optical.sharpness + 0.05f); updateOptical() }, weight())
+            addView(button("Contraste −") { optical = optical.copy(contrast = optical.contrast - 0.05f); updateOptical() }, weight())
+            addView(button("Contraste +") { optical = optical.copy(contrast = optical.contrast + 0.05f); updateOptical() }, weight())
+            addView(button("Axe +15°") { optical = optical.copy(axisDegrees = optical.axisDegrees + 15f); updateOptical() }, weight())
+            addView(button("Enregistrer") { updateOptical() }, weight())
+        }
+        container.addView(opticalControls, FrameLayout.LayoutParams(-1, dp(46), Gravity.BOTTOM).apply { bottomMargin = dp(46) })
+
         scaleDetector = ScaleGestureDetector(service, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
                 initialHeight = params?.height ?: return false
@@ -125,6 +149,7 @@ internal class GpuMagnifierOverlay(
         root = container
         windowManager.addView(container, params)
         onZoomChanged(zoom)
+        onOpticalChanged(optical)
     }
 
     fun close() {
@@ -133,7 +158,11 @@ internal class GpuMagnifierOverlay(
         params = null
     }
 
-    private fun save() = preferences.edit().putFloat("zoom", zoom).putFloat("window_fraction", windowFraction).apply()
+    private fun save() = preferences.edit().putFloat("zoom", zoom).putFloat("window_fraction", windowFraction)
+        .putBoolean("optical_enabled", optical.enabled).putFloat("optical_sharpness", optical.sharpness)
+        .putFloat("optical_contrast", optical.contrast).putFloat("optical_directional", optical.directionalStrength)
+        .putFloat("optical_axis", optical.axisDegrees).apply()
+    private fun updateOptical() { optical = optical.sanitized(); save(); onOpticalChanged(optical) }
     private fun button(label: String, action: Button.() -> Unit) = Button(service).apply {
         text = label; textSize = 9f; minWidth = 0; setPadding(0, 0, 0, 0); isAllCaps = false
         setOnClickListener { action() }

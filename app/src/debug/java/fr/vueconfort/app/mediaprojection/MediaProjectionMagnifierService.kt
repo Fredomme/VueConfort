@@ -28,6 +28,7 @@ class MediaProjectionMagnifierService : Service() {
     private var stopping = false
     private var paused = false
     private var pendingZoom = 2f
+    private var pendingOptical = OpticalGpuParameters()
     private val projectionCallback = object : MediaProjection.Callback() {
         override fun onStop() {
             Log.i(TAG, "MediaProjection.onStop")
@@ -73,6 +74,7 @@ class MediaProjectionMagnifierService : Service() {
             onClose = { stopExperiment(true) },
             onPauseChanged = { setPaused(it) },
             onZoomChanged = { pendingZoom = it; renderer?.setZoom(it) },
+            onOpticalChanged = { pendingOptical = it; renderer?.setOptical(it) },
             onMoveSource = { x, y -> renderer?.moveSource(x, y) },
             onRecenter = { renderer?.recenter() }
         ).also { it.show() }
@@ -111,7 +113,7 @@ class MediaProjectionMagnifierService : Service() {
             onMetrics = { metrics ->
                 Log.i(TAG, "frames=${metrics.frames} avgFps=${metrics.averageFps} minFps=${metrics.minimumFps}")
             }
-        ).also { it.setZoom(pendingZoom); it.start() }
+        ).also { it.setZoom(pendingZoom); it.setOptical(pendingOptical); it.start() }
     }
 
     private fun setPaused(value: Boolean) {
