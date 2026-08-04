@@ -418,6 +418,28 @@ class ScreenMagnifierService : AccessibilityService() {
                 },
                 panelButtonLayout()
             )
+            if (BuildConfig.EXPERIMENTAL_MEDIA_PROJECTION_MAGNIFIER) {
+                panel.addView(
+                    createButton(getString(R.string.gpu_magnifier_name)) {
+                        customMagnifierController?.close()
+                        customMagnifierController = null
+                        disableMagnification()
+                        removePanel()
+                        runCatching {
+                            startActivity(
+                                Intent().setClassName(
+                                    packageName,
+                                    "fr.vueconfort.app.mediaprojection.MediaProjectionConsentActivity"
+                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        }.onFailure {
+                            Toast.makeText(this@ScreenMagnifierService, R.string.error_unknown, Toast.LENGTH_LONG).show()
+                            showFloatingButton()
+                        }
+                    },
+                    panelButtonLayout()
+                )
+            }
         }
         panel.addView(profileLabel, matchWidthLayout())
         panel.addView(profileList, matchWidthLayout())
@@ -1066,5 +1088,7 @@ class ScreenMagnifierService : AccessibilityService() {
         fun handleExternalAction(action: String) {
             instance?.handleAction(action)
         }
+
+        fun activeInstanceForExperiment(): ScreenMagnifierService? = instance
     }
 }

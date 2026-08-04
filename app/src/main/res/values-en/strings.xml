@@ -19,5 +19,6 @@
     <string name="custom_magnifier_name">VueConfort Magnifier — experimental</string>
     <string name="custom_magnifier_disclosure">To display a magnified area, VueConfort temporarily analyses the image visible on screen using the Android accessibility service. The image is processed only on this device, in memory, then immediately discarded. It is neither saved nor transmitted. Secure screens are not captured.</string>
     <string name="custom_magnifier_activate">Enable VueConfort Magnifier</string>
+    <string name="gpu_magnifier_name">Smooth VueConfort Magnifier — MediaProjection</string>
     <plurals name="attempt_count"><item quantity="one">%d attempt</item><item quantity="other">%d attempts</item></plurals>
 </resources>

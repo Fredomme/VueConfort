@@ -57,5 +57,6 @@
     <string name="custom_magnifier_name">Loupe VueConfort — expérimentale</string>
     <string name="custom_magnifier_disclosure">Pour afficher une zone agrandie, VueConfort analyse temporairement l’image visible à l’écran à l’aide du service d’accessibilité Android. L’image est traitée uniquement sur cet appareil, en mémoire, puis immédiatement supprimée. Elle n’est ni enregistrée, ni transmise. Les écrans sécurisés ne sont pas capturés.</string>
     <string name="custom_magnifier_activate">Activer la Loupe VueConfort</string>
+    <string name="gpu_magnifier_name">Loupe VueConfort fluide — MediaProjection</string>
     <plurals name="attempt_count"><item quantity="one">%d essai</item><item quantity="other">%d essais</item></plurals>
 </resources>

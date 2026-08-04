@@ -58,10 +58,12 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            buildConfigField("boolean", "EXPERIMENTAL_MEDIA_PROJECTION_MAGNIFIER", "true")
             isMinifyEnabled = false
             isShrinkResources = false
         }
         release {
+            buildConfigField("boolean", "EXPERIMENTAL_MEDIA_PROJECTION_MAGNIFIER", "false")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
