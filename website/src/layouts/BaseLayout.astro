@@ -7,9 +7,10 @@ const { lang, title, description, slug, image = '/og.png' } = Astro.props;
 const t = ui[lang];
 const path = slug ? routes[lang][slug] : '';
 const canonical = new URL(`/${lang}/${path ? `${path}/` : ''}`, Astro.site);
-const otherLang: Lang = lang === 'fr' ? 'en' : 'fr';
-const otherPath = slug ? routes[otherLang][slug] : '';
 const currentSlug = slug;
+const documentTitle = title === 'VueConfort'
+  ? (lang === 'fr' ? 'VueConfort — confort de lecture sur mobile' : 'VueConfort — mobile reading comfort')
+  : `${title} · VueConfort`;
 const schema = [{
   '@context':'https://schema.org','@type':'WebSite',name:'VueConfort',url:'https://vueconfort.fr/',
   inLanguage:['fr-FR','en-US'],description
@@ -31,13 +32,12 @@ const schema = [{
     {languages.map((code) => <link rel="alternate" hreflang={code} href={new URL(`/${code}/${slug ? `${routes[code][slug]}/` : ''}`, Astro.site)} />)}
     <link rel="alternate" hreflang="x-default" href={new URL('/fr/', Astro.site)} />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="VueConfort" />
     <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
-    <meta property="og:title" content={`${title} · VueConfort`} />
+    <meta property="og:title" content={documentTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={new URL(image, Astro.site)} />
@@ -45,10 +45,10 @@ const schema = [{
     <meta property="og:image:height" content="1024" />
     <meta property="og:image:alt" content="VueConfort — confort de lecture sur mobile" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={`${title} · VueConfort`} />
+    <meta name="twitter:title" content={documentTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={new URL(image, Astro.site)} />
-    <title>{title} · VueConfort</title>
+    <title>{documentTitle}</title>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
     <script is:inline>
       const savedTheme = localStorage.getItem('vueconfort-theme');
@@ -65,13 +65,15 @@ const schema = [{
           {navItems[lang].map(([key,label]) => <a href={`/${lang}/${routes[lang][key]}/`} aria-current={currentSlug === key ? 'page' : undefined}>{label}</a>)}
         </nav>
         <div class="utility">
-          <a href={`/${otherLang}/${otherPath ? `${otherPath}/` : ''}`} lang={otherLang} hreflang={otherLang}>{t.lang}</a>
+          <div class="language-switch" aria-label={lang==='fr'?'Choisir la langue':'Choose language'}>
+            <a href={`/fr/${slug ? `${routes.fr[slug]}/` : ''}`} lang="fr" hreflang="fr" aria-current={lang==='fr'?'page':undefined}>FR</a><span aria-hidden="true">|</span><a href={`/en/${slug ? `${routes.en[slug]}/` : ''}`} lang="en" hreflang="en" aria-current={lang==='en'?'page':undefined}>EN</a>
+          </div>
           <button class="icon-btn" id="theme-toggle" type="button" aria-label={t.theme} title={t.theme}>◐</button>
           <button class="icon-btn menu-btn" id="menu-toggle" type="button" aria-label={t.menu} aria-expanded="false" aria-controls="mobile-menu">☰</button>
         </div>
       </div>
       <nav class="container mobile-nav" id="mobile-menu" aria-label={t.nav}>
-        {navItems[lang].map(([key,label]) => <a href={`/${lang}/${routes[lang][key]}/`}>{label}</a>)}
+        {navItems[lang].map(([key,label]) => <a href={`/${lang}/${routes[lang][key]}/`} aria-current={currentSlug === key ? 'page' : undefined}>{label}</a>)}
         <a href={`/${lang}/${routes[lang].telechargement}/`}>{t.android}</a>
       </nav>
     </header>

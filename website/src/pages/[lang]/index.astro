@@ -4,15 +4,29 @@ import { home, languages, routes, ui, type Lang } from '../../content/site';
 export function getStaticPaths(){ return languages.map((lang)=>({params:{lang},props:{lang}})); }
 const { lang } = Astro.props as {lang:Lang};
 const t=ui[lang], h=home[lang];
-const features = lang==='fr' ? [
-  ['Tests visuels','Landolt C, E directionnel, contraste et Amsler avec calibration et historique local.'],
-  ['Profils intelligents','Des réglages adaptés à la lecture, aux petits textes, à l’extérieur et à vos préférences.'],
-  ['Lecteur VueConfort','Une présentation réglable du texte, sans capture d’écran ni envoi vers un serveur.']
-] : [
-  ['Visual tests','Landolt C, directional E, contrast and Amsler with calibration and on-device history.'],
-  ['Smart profiles','Settings adapted to reading, small text, outdoors and your own preferences.'],
-  ['VueConfort Reader','Adjustable text presentation, with no screenshot or server transfer.']
-];
+const copy = lang === 'fr' ? {
+  howTitle:'Comment ça fonctionne ?', howIntro:'Trois étapes simples, avec des réglages que vous gardez sous contrôle.',
+  how:[['Testez votre confort visuel','Dépistage visuel sur écran et calibration physique.'],['Créez votre profil','Réglages adaptés à vos préférences et à vos usages.'],['Utilisez VueConfort au quotidien','Grossissement, lecteur adapté et profils automatiques selon l’application.']],
+  forTitle:'VueConfort est fait pour vous si…', forItems:['vous éloignez souvent votre téléphone pour lire ;','vous augmentez régulièrement la taille du texte ;','vous ressentez une fatigue visuelle après une longue lecture ;','vous avez du mal avec les petits caractères ;','vous n’avez pas encore de lunettes adaptées ou ne les portez pas toujours.'],
+  caution:'VueConfort améliore le confort de lecture, mais ne remplace pas un professionnel de la vision.',
+  benefitsTitle:'Ce que VueConfort vous apporte', benefits:['Lire plus confortablement.','Réduire les manipulations répétées.','Retrouver automatiquement vos réglages.','Adapter l’affichage à différents usages.','Lire certains contenus dans un lecteur simplifié.','Conserver toutes vos données localement.'],
+  compareTitle:'Un affichage pensé pour la lecture', before:'Avant', after:'Après · profil Lecture', sample:'Un texte utile doit rester facile à parcourir, même sur un petit écran.',
+  proofTitle:'Des fonctions concrètes, des limites explicites', proofIntro:'L’aperçu ci-dessus est une illustration du lecteur, pas une capture de l’application. Voici ce que le produit prend réellement en charge.',
+  proof:[['Grossissement Android','Commandes rapides reposant sur les capacités d’accessibilité Android.'],['Profils locaux','Préférences de lecture et règles conservées sur l’appareil.'],['Lecteur adapté','Texte accessible présenté avec taille, interligne et contraste réglables.'],['Tests guidés','Landolt C, E directionnel, contraste et Amsler avec calibration.']],
+  trustTitle:'Conçu pour être utile et respectueux', trust:['Développé en France.','Fonctionnement local.','Aucun compte obligatoire.','Aucun texte envoyé sur Internet.','Aucune publicité.','Aucun suivi analytique.','Aucun enregistrement d’écran.','Données contrôlées par l’utilisateur.'],
+  whyTitle:'Pourquoi VueConfort ?', classic:'Réglages classiques', classicItems:['Taille fixe','Zoom manuel','Peu de personnalisation','Réglages dispersés'], product:'VueConfort', productItems:['Profils personnalisés','Grossissement rapide','Règles automatiques','Lecteur adapté','Bilan visuel','Fonctionnement local']
+} : {
+  howTitle:'How does it work?', howIntro:'Three simple steps, with settings you remain in control of.',
+  how:[['Check your visual comfort','On-screen visual screening and physical calibration.'],['Create your profile','Settings adapted to your preferences and uses.'],['Use VueConfort every day','Magnification, adapted reader and automatic profiles by app.']],
+  forTitle:'VueConfort may be right for you if…', forItems:['you often hold your phone farther away to read;','you regularly increase text size;','you feel visual fatigue after a long reading session;','you struggle with small print;','you do not yet have suitable glasses or do not always wear them.'],
+  caution:'VueConfort improves reading comfort but does not replace an eye-care professional.',
+  benefitsTitle:'What VueConfort brings you', benefits:['Read more comfortably.','Reduce repeated adjustments.','Restore your settings automatically.','Adapt display to different uses.','Read some content in a simplified reader.','Keep all your data on-device.'],
+  compareTitle:'A display designed for reading', before:'Before', after:'After · Reading profile', sample:'Useful text should remain easy to scan, even on a small screen.',
+  proofTitle:'Concrete features, explicit limits', proofIntro:'The preview above illustrates the reader; it is not an app screenshot. Here is what the product actually supports.',
+  proof:[['Android magnification','Quick controls using Android accessibility capabilities.'],['On-device profiles','Reading preferences and rules kept on the device.'],['Adapted reader','Accessible text displayed with adjustable size, spacing and contrast.'],['Guided tests','Landolt C, directional E, contrast and Amsler with calibration.']],
+  trustTitle:'Designed to be useful and respectful', trust:['Developed in France.','On-device operation.','No mandatory account.','No text sent over the Internet.','No advertising.','No analytics tracking.','No screen recording.','User-controlled data.'],
+  whyTitle:'Why VueConfort?', classic:'Standard settings', classicItems:['Fixed size','Manual zoom','Limited personalisation','Scattered settings'], product:'VueConfort', productItems:['Personal profiles','Quick magnification','Automatic rules','Adapted reader','Visual summary','On-device operation']
+};
 ---
 <BaseLayout lang={lang} title={h.title} description={h.description}>
   <section class="hero">
@@ -20,19 +34,29 @@ const features = lang==='fr' ? [
       <div>
         <p class="eyebrow">{lang==='fr'?'Confort visuel sur mobile':'Visual comfort on mobile'}</p>
         <h1>{h.title}</h1><h2>{h.subtitle}</h2><p class="lead">{h.intro}</p>
-        <div class="actions">
+        <div class="actions hero-actions">
           <a class="button primary" href={`/${lang}/${routes[lang].telechargement}/#android`}>{t.android}</a>
-          <a class="button secondary" href={`/${lang}/${routes[lang].telechargement}/#iphone`}>{t.iphone}</a>
-          <a class="button ghost" href="#decouvrir">{t.discover}</a>
+          <a class="button secondary" href="#fonctionnement">{t.discover}</a>
+          <a class="button ghost" href={`/${lang}/${routes[lang].telechargement}/#iphone`}>{t.iphone}</a>
         </div>
       </div>
-      <div class="visual-stage" aria-label={lang==='fr'?'Aperçu stylisé du lecteur VueConfort':'Stylised preview of VueConfort Reader'}>
+      <div class="visual-stage" aria-label={lang==='fr'?'Illustration du lecteur VueConfort':'Illustration of VueConfort Reader'}>
         <span class="orb a" aria-hidden="true"></span><span class="orb b" aria-hidden="true"></span>
         <div class="phone" aria-hidden="true"><span class="phone-notch"></span><div class="phone-screen"><strong>VueConfort</strong><div class="sample-bar"></div><div class="sample-bar short"></div><div class="reader-card"><strong>{lang==='fr'?'Lire confortablement':'Read comfortably'}</strong><p>{lang==='fr'?'Une taille adaptée, un interligne stable et des réglages qui restent sur votre appareil.':'Adapted sizing, stable line spacing and settings that stay on your device.'}</p><div class="sample-bar"></div><div class="sample-bar short"></div></div></div></div>
       </div>
     </div>
   </section>
   <section class="trust-strip"><div class="container trust-grid"><div class="trust-item">{t.local}</div><div class="trust-item">{t.noTracking}</div><div class="trust-item">{t.accessible}</div></div></section>
-  <section class="section soft" id="decouvrir"><div class="container"><div class="section-head"><h2>{lang==='fr'?'Pensé pour mieux lire, pas pour mieux suivre.':'Designed for better reading, not better tracking.'}</h2><p>{lang==='fr'?'Chaque fonction répond à un besoin concret et respecte les protections de votre téléphone.':'Every feature answers a practical need and respects your phone’s protections.'}</p></div><div class="grid-3">{features.map(([title,body],i)=><article class="card"><span class="number">0{i+1}</span><h3>{title}</h3><p>{body}</p></article>)}</div></div></section>
-  <section class="section"><div class="container"><div class="section-head"><h2>{lang==='fr'?'Vos données ne deviennent jamais notre produit.':'Your data never becomes our product.'}</h2><p>{lang==='fr'?'Pas de compte, pas de serveur, pas de publicité, pas d’analytics. Le site lui-même n’utilise aucun cookie ni tracker.':'No account, server, advertising or analytics. This website itself uses no cookie or tracker.'}</p></div><div class="actions"><a class="button primary" href={`/${lang}/${routes[lang].confidentialite}/`}>{t.privacy}</a><a class="button secondary" href={`/${lang}/${routes[lang].fonctionnalites}/`}>{t.learn}</a></div><div class="notice">{t.disclaimer}</div></div></section>
+
+  <section class="section soft" id="fonctionnement"><div class="container"><div class="section-head"><h2>{copy.howTitle}</h2><p>{copy.howIntro}</p></div><div class="grid-3">{copy.how.map(([title,body],i)=><article class="card"><span class="number">0{i+1}</span><h3>{title}</h3><p>{body}</p></article>)}</div></div></section>
+
+  <section class="section"><div class="container split-section"><div><p class="eyebrow">{lang==='fr'?'Vos habitudes':'Your habits'}</p><h2>{copy.forTitle}</h2><ul class="check-list">{copy.forItems.map(item=><li>{item}</li>)}</ul><div class="notice">{copy.caution}</div></div><div class="benefit-panel"><h2>{copy.benefitsTitle}</h2><ul class="benefit-list">{copy.benefits.map(item=><li>{item}</li>)}</ul></div></div></section>
+
+  <section class="section soft"><div class="container"><div class="section-head"><h2>{copy.compareTitle}</h2><p>{lang==='fr'?'Même contenu, présentation plus lisible. Cette démonstration illustre un réglage d’affichage, pas une correction visuelle.':'Same content, more readable presentation. This demonstrates a display setting, not vision correction.'}</p></div><div class="reading-compare"><article class="reading-sample before"><span>{copy.before}</span><p>{copy.sample}</p></article><article class="reading-sample after"><span>{copy.after}</span><p>{copy.sample}</p></article></div></div></section>
+
+  <section class="section"><div class="container"><div class="section-head"><h2>{copy.proofTitle}</h2><p>{copy.proofIntro}</p></div><div class="grid-4">{copy.proof.map(([title,body])=><article class="card proof-card"><h3>{title}</h3><p>{body}</p></article>)}</div><div class="actions"><a class="button primary" href={`/${lang}/${routes[lang].fonctionnalites}/`}>{t.discover}</a><a class="button secondary" href={`/${lang}/${routes[lang]['tests-visuels']}/`}>{lang==='fr'?'Comprendre les tests':'Understand the tests'}</a></div></div></section>
+
+  <section class="section soft"><div class="container"><div class="section-head"><h2>{copy.trustTitle}</h2><p>{lang==='fr'?'La confidentialité n’est pas une option ajoutée après coup : elle structure le produit.':'Privacy is not an afterthought: it shapes the product.'}</p></div><ul class="trust-list">{copy.trust.map(item=><li>{item}</li>)}</ul><div class="actions"><a class="button primary" href={`/${lang}/${routes[lang].confidentialite}/`}>{t.privacy}</a></div></div></section>
+
+  <section class="section"><div class="container"><div class="section-head"><h2>{copy.whyTitle}</h2><p>{lang==='fr'?'Une approche complémentaire aux réglages du téléphone, sans les dénigrer.':'A complementary approach to phone settings, without dismissing them.'}</p></div><div class="compare-cards"><article class="card"><h3>{copy.classic}</h3><ul class="plain-list">{copy.classicItems.map(item=><li>{item}</li>)}</ul></article><article class="card featured"><h3>{copy.product}</h3><ul class="check-list">{copy.productItems.map(item=><li>{item}</li>)}</ul></article></div><div class="notice">{t.disclaimer}</div></div></section>
 </BaseLayout>
