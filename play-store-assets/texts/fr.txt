@@ -1,0 +1,50 @@
+TITRE
+VueConfort
+
+DESCRIPTION COURTE
+Adaptez zoom, profils et lecture à votre confort visuel, en local.
+
+DESCRIPTION LONGUE
+Votre écran s’adapte à vos yeux, pas l’inverse.
+
+VueConfort est une application Android d’assistance au confort de lecture. Elle réunit des réglages simples et personnalisables pour rendre les textes et les interfaces plus faciles à consulter sur votre téléphone.
+
+FONCTIONS PRINCIPALES
+
+• Grossissement Android et commandes flottantes après activation volontaire du service d’accessibilité
+• Profils de confort personnalisables selon vos usages
+• Lecteur adapté utilisant le texte accessible uniquement lorsque vous choisissez Lire
+• Calibration guidée des préférences d’affichage
+• Outils de dépistage visuel sur écran et historique local
+• Règles automatiques locales par application, horaire ou luminosité
+• Réglages de taille, contraste, espacement, apparence et grossissement
+
+CONFIDENTIALITÉ PAR CONCEPTION
+
+VueConfort fonctionne sans compte, serveur, publicité ni outil d’analyse. L’application ne demande aucune permission Internet. Les profils, réglages, calibrations et résultats restent dans le stockage privé de l’appareil.
+
+Le service d’accessibilité sert à afficher la barre d’assistance, à piloter le grossissement Android, à détecter l’application active pour vos règles locales et à extraire le texte accessible uniquement lorsque vous demandez la fonction Lire. VueConfort ne capture pas l’écran, n’enregistre pas les mots de passe et ne transmet aucun contenu.
+
+LIMITES CLAIRES
+
+VueConfort ne corrige pas la vue et ne remplace pas des lunettes. Ses tests sont des outils de dépistage sur écran : ils ne posent aucun diagnostic, ne constituent pas une ordonnance et ne remplacent pas un opticien ou un ophtalmologue.
+
+Certaines applications, images, vidéos, jeux, pages Web ou fenêtres protégées peuvent ne fournir aucun texte accessible. VueConfort respecte ces limitations et ne contourne pas les protections Android.
+
+Compatibilité : Android 9 ou version ultérieure. Certaines fonctions système peuvent varier selon le fabricant et la version Android.
+
+NOUVEAUTÉS — VERSION 1.0.0
+
+Première version publique de VueConfort : grossissement et barre flottante, profils personnalisables, lecteur local sur demande, calibration, tests visuels avec historique local, configuration guidée et outils de confidentialité.
+
+CATÉGORIE RECOMMANDÉE
+Outils
+
+TAGS RECOMMANDÉS
+Accessibilité, Outils, Productivité
+
+CONTACTS
+Support : support@vueconfort.fr
+Confidentialité : privacy@vueconfort.fr
+Site : https://vueconfort.fr
+Politique : https://vueconfort.fr/fr/confidentialite/

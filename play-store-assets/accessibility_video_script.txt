@@ -1,0 +1,43 @@
+VIDÉO DE DÉMONSTRATION ACCESSIBILITY API — 45 À 60 SECONDES
+
+Préparation
+- Filmer un Galaxy S25 réel en français, en portrait.
+- Activer l’affichage des pressions dans les options développeur.
+- Utiliser un compte et des contenus de démonstration sans information personnelle.
+- Publier la vidéo en mode non répertorié et conserver son URL pour Play Console.
+
+00:00–00:05 — Ouverture
+Plan : ouvrir VueConfort depuis l’écran d’accueil, puis afficher l’accueil de l’application.
+Voix/texte : « VueConfort adapte localement le grossissement et la lecture pour améliorer le confort visuel. »
+
+00:05–00:15 — Divulgation préalable
+Plan : ouvrir la configuration guidée et rester sur l’étape “Service d’accessibilité”. Filmer le texte complet expliquant la barre, le grossissement, l’application active et le texte accessible demandé par Lire.
+Voix/texte : « Avant l’activation, VueConfort explique précisément les données accessibles et leur usage. Elles restent sur l’appareil et ne sont ni enregistrées ni partagées. »
+
+00:15–00:23 — Consentement et activation
+Plan : toucher “Ouvrir les réglages d’accessibilité”, sélectionner VueConfort, afficher l’avertissement Android et accepter volontairement.
+À montrer : le nom VueConfort, l’interrupteur désactivé puis activé et la confirmation Android.
+À éviter : couper la vidéo avant l’avertissement ou masquer les choix de consentement.
+
+00:23–00:32 — Barre flottante
+Plan : revenir dans VueConfort puis ouvrir Chrome sur une page publique sans donnée personnelle. Montrer la barre VueConfort au-dessus de Chrome.
+Voix/texte : « Le service affiche des commandes d’assistance au-dessus des applications. »
+
+00:32–00:41 — Grossissement
+Plan : utiliser les commandes + puis −. Filmer clairement l’agrandissement et le retour à une échelle plus faible.
+Voix/texte : « Les commandes pilotent le grossissement système Android. »
+
+00:41–00:51 — Fonction Lire
+Plan : sur une page Web simple, toucher Lire, puis montrer le texte accessible présenté dans le lecteur VueConfort.
+Voix/texte : « Le texte accessible est extrait uniquement à la demande pour être présenté localement dans le lecteur. »
+
+00:51–00:58 — Limites et confidentialité
+Plan : afficher l’écran Confidentialité de VueConfort.
+Voix/texte : « VueConfort n’utilise ni capture d’écran, ni enregistrement, ni serveur, ni publicité, ni transmission de contenu. Certaines applications peuvent ne fournir aucun texte accessible. »
+
+00:58–01:00 — Fin
+Plan : logo VueConfort et adresse vueconfort.fr.
+Texte : « VueConfort — Votre écran s’adapte à vos yeux, pas l’inverse. »
+
+PLAN DE REFUS À AJOUTER SI PLAY CONSOLE LE DEMANDE
+Rejouer l’étape d’activation, choisir Annuler dans l’avertissement Android, puis montrer que l’application reste consultable et que les fonctions dépendantes du service sont signalées comme inactives.

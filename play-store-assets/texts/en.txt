@@ -1,0 +1,50 @@
+TITLE
+VueConfort
+
+SHORT DESCRIPTION
+Adjust zoom, profiles and reading for visual comfort, entirely on-device.
+
+FULL DESCRIPTION
+Your screen adapts to your eyes, not the other way around.
+
+VueConfort is an Android reading-comfort assistance app. It brings together clear, customisable controls designed to make text and phone interfaces easier to view.
+
+KEY FEATURES
+
+• Android magnification and floating controls after you voluntarily enable the accessibility service
+• Customisable comfort profiles for different situations
+• Adapted reader using accessible text only when you choose Read
+• Guided display-preference calibration
+• On-screen visual screening tools with local history
+• On-device rules by app, time or ambient light
+• Size, contrast, spacing, appearance and magnification controls
+
+PRIVATE BY DESIGN
+
+VueConfort works without an account, server, advertising or analytics. The app requests no Internet permission. Profiles, settings, calibrations and results remain in the device’s private app storage.
+
+The accessibility service displays the assistance bar, controls Android magnification, detects the active app for your local rules and extracts accessible text only when you request the Read feature. VueConfort does not capture the screen, record passwords or transmit content.
+
+CLEAR LIMITS
+
+VueConfort does not correct eyesight or replace glasses. Its tests are on-screen screening tools: they provide no diagnosis, are not a prescription and do not replace an optician or ophthalmologist.
+
+Some apps, images, videos, games, web pages or protected windows may expose no accessible text. VueConfort respects these limits and does not bypass Android protections.
+
+Compatibility: Android 9 or later. Some system functions may vary by device manufacturer and Android version.
+
+WHAT’S NEW — VERSION 1.0.0
+
+First public VueConfort release: magnification and floating bar, customisable profiles, on-request local reader, calibration, visual screening with local history, guided setup and privacy controls.
+
+RECOMMENDED CATEGORY
+Tools
+
+RECOMMENDED TAGS
+Accessibility, Tools, Productivity
+
+CONTACTS
+Support: support@vueconfort.fr
+Privacy: privacy@vueconfort.fr
+Website: https://vueconfort.fr
+Privacy policy: https://vueconfort.fr/en/privacy/
