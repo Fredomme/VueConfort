@@ -74,7 +74,7 @@ const schema = [{
       </div>
       <nav class="container mobile-nav" id="mobile-menu" aria-label={t.nav}>
         {navItems[lang].map(([key,label]) => <a href={`/${lang}/${routes[lang][key]}/`} aria-current={currentSlug === key ? 'page' : undefined}>{label}</a>)}
-        <a href={`/${lang}/${routes[lang].telechargement}/`}>{t.android}</a>
+        <a href={`/${lang}/${routes[lang].android}/`}>{t.android}</a>
       </nav>
     </header>
     <main id="main"><slot /></main>
@@ -82,7 +82,7 @@ const schema = [{
       <div class="container">
         <div class="footer-grid">
           <div><a class="brand" href={`/${lang}/`}><span class="brand-mark" aria-hidden="true"></span>VueConfort</a><p>{t.footer}</p></div>
-          <div class="footer-links"><h2>{lang==='fr'?'Explorer':'Explore'}</h2><a href={`/${lang}/${routes[lang].fonctionnalites}/`}>{navItems[lang][0][1]}</a><a href={`/${lang}/${routes[lang]['tests-visuels']}/`}>{navItems[lang][1][1]}</a><a href={`/${lang}/${routes[lang].blog}/`}>Blog</a><a href={`/${lang}/${routes[lang].presse}/`}>{lang==='fr'?'Presse':'Press'}</a></div>
+          <div class="footer-links"><h2>{lang==='fr'?'Explorer':'Explore'}</h2><a href={`/${lang}/${routes[lang].android}/`}>{lang==='fr'?'Bêta Android':'Android beta'}</a><a href={`/${lang}/${routes[lang].fonctionnalites}/`}>{navItems[lang][0][1]}</a><a href={`/${lang}/${routes[lang]['tests-visuels']}/`}>{navItems[lang][1][1]}</a><a href={`/${lang}/${routes[lang].blog}/`}>Blog</a><a href={`/${lang}/${routes[lang].presse}/`}>{lang==='fr'?'Presse':'Press'}</a></div>
           <div class="footer-links"><h2>{t.contact}</h2><a href={`/${lang}/${routes[lang].support}/`}>Support</a><a href={`/${lang}/${routes[lang].contact}/`}>contact@vueconfort.fr</a><a href={`/${lang}/${routes[lang].confidentialite}/`}>{t.privacy}</a><a href={`/${lang}/${routes[lang]['mentions-legales']}/`}>{t.legal}</a></div>
         </div>
         <div class="fine-print"><span>© {new Date().getFullYear()} VueConfort. {t.rights}</span><span>{t.disclaimer}</span></div>

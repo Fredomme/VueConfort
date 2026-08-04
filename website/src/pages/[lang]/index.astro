@@ -35,7 +35,7 @@ const copy = lang === 'fr' ? {
         <p class="eyebrow">{lang==='fr'?'Confort visuel sur mobile':'Visual comfort on mobile'}</p>
         <h1>{h.title}</h1><h2>{h.subtitle}</h2><p class="lead">{h.intro}</p>
         <div class="actions hero-actions">
-          <a class="button primary" href={`/${lang}/${routes[lang].telechargement}/#android`}>{t.android}</a>
+          <a class="button primary" href={`/${lang}/${routes[lang].android}/`}>{t.android}</a>
           <a class="button secondary" href="#fonctionnement">{t.discover}</a>
           <a class="button ghost" href={`/${lang}/${routes[lang].telechargement}/#iphone`}>{t.iphone}</a>
         </div>
@@ -47,6 +47,8 @@ const copy = lang === 'fr' ? {
     </div>
   </section>
   <section class="trust-strip"><div class="container trust-grid"><div class="trust-item">{t.local}</div><div class="trust-item">{t.noTracking}</div><div class="trust-item">{t.accessible}</div></div></section>
+
+  <section class="section android-home"><div class="container android-home-panel"><div><span class="status-badge">{lang==='fr'?'Bêta Android':'Android beta'}</span><h2>{lang==='fr'?'VueConfort fonctionne déjà sur Android':'VueConfort already works on Android'}</h2><p class="lead">{lang==='fr'?'Une première version fonctionnelle est actuellement testée sur Galaxy S25. La publication Google Play est en préparation.':'A first functional version is currently being tested on Galaxy S25. The Google Play release is in preparation.'}</p></div><div class="actions"><a class="button primary" href={`/${lang}/${routes[lang].android}/`}>{lang==='fr'?'Découvrir la version Android':'Explore the Android version'}</a><a class="button secondary" href={`/${lang}/${routes[lang].fonctionnalites}/`}>{lang==='fr'?'Voir les fonctionnalités':'View features'}</a></div></div></section>
 
   <section class="section soft" id="fonctionnement"><div class="container"><div class="section-head"><h2>{copy.howTitle}</h2><p>{copy.howIntro}</p></div><div class="grid-3">{copy.how.map(([title,body],i)=><article class="card"><span class="number">0{i+1}</span><h3>{title}</h3><p>{body}</p></article>)}</div></div></section>
 
