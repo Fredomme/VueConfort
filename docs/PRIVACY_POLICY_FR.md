@@ -26,4 +26,6 @@ Depuis les réglages, l’utilisateur peut supprimer l’historique, réinitiali
 
 ## Contact
 
-L’adresse de contact de l’éditeur doit être ajoutée avant publication sur Google Play.
+Pour toute question générale : contact@vueconfort.fr. Pour toute question relative à la confidentialité : privacy@vueconfort.fr.
+
+Version publique : https://vueconfort.fr/fr/confidentialite/

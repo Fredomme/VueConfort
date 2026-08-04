@@ -26,4 +26,6 @@ In Settings, users can delete history, reset profiles, clear automation rules or
 
 ## Contact
 
-The publisher’s contact address must be added before release on Google Play.
+For general enquiries: contact@vueconfort.fr. For privacy enquiries: privacy@vueconfort.fr.
+
+Public version: https://vueconfort.fr/en/privacy/
