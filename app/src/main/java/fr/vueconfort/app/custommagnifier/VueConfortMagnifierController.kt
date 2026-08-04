@@ -2,8 +2,11 @@ package fr.vueconfort.app.custommagnifier
 
 import android.accessibilityservice.AccessibilityService
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Build
@@ -35,6 +38,11 @@ internal class VueConfortMagnifierController(
     private var statusView: TextView? = null
     private var zoomView: TextView? = null
     private var displayedBitmap: Bitmap? = null
+    private val sourceRect = MagnifierRect(0, 0, 0, 0)
+    private val androidSourceRect = Rect()
+    private val destinationRect = Rect()
+    private val renderPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val renderCanvas = Canvas()
     private var running = false
     private var paused = false
     private var captureInFlight = false
@@ -42,6 +50,8 @@ internal class VueConfortMagnifierController(
     private var frameCount = 0L
     private var errorCount = 0L
     private var latencyTotalMs = 0L
+    private var captureIntervalMs = BALANCED_INTERVAL_MS
+    private var consecutiveSuccesses = 0
 
     fun requestStart() {
         if (settings.consented) start() else showDisclosure()
@@ -74,6 +84,8 @@ internal class VueConfortMagnifierController(
         frameCount = 0
         errorCount = 0
         latencyTotalMs = 0
+        captureIntervalMs = BALANCED_INTERVAL_MS
+        consecutiveSuccesses = 0
         showMagnifierOverlay()
         scheduleCapture(120)
     }
@@ -124,50 +136,57 @@ internal class VueConfortMagnifierController(
         if (!running || paused || captureInFlight) return@Runnable
         captureInFlight = true
         val captureStarted = SystemClock.elapsedRealtime()
-        frameProvider.captureOnce { result ->
-            captureInFlight = false
-            result.fold(
-                onSuccess = { screen ->
+        frameProvider.captureOnce(
+            onFrame = { screen ->
+                    captureInFlight = false
                     val latency = SystemClock.elapsedRealtime() - captureStarted
                     latencyTotalMs += latency
                     frameCount++
                     updateFrame(screen)
-                    screen.recycle()
+                    consecutiveSuccesses++
+                    if (consecutiveSuccesses >= SUCCESS_WINDOW) {
+                        captureIntervalMs = (captureIntervalMs - ADAPTIVE_STEP_MS)
+                            .coerceAtLeast(QUALITY_INTERVAL_MS)
+                        consecutiveSuccesses = 0
+                    }
                     if (frameCount % 120L == 0L) logMetrics()
-                    scheduleCapture((500L - latency).coerceAtLeast(40L))
+                    scheduleCapture((captureIntervalMs - latency).coerceAtLeast(MIN_DELAY_MS))
                 },
-                onFailure = { throwable ->
+            onFailure = { errorCode, throwable ->
+                    captureInFlight = false
                     errorCount++
-                    if ((throwable as? ScreenshotException)?.errorCode ==
-                        AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT
-                    ) {
+                    consecutiveSuccesses = 0
+                    if (errorCode == AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT) {
+                        captureIntervalMs = (captureIntervalMs + BACKOFF_STEP_MS)
+                            .coerceAtMost(BATTERY_INTERVAL_MS)
                         statusView?.text = "Cadence réduite temporairement"
-                        scheduleCapture(800)
+                        scheduleCapture(captureIntervalMs)
                     } else {
-                        statusView?.text = captureErrorMessage(throwable)
+                        statusView?.text = captureErrorMessage(errorCode, throwable)
                         paused = true
                         logMetrics()
                     }
                 }
-            )
-        }
+        )
     }
 
     private fun updateFrame(screen: Bitmap) {
-        val source = MagnifierGeometry.sourceRect(screen.width, screen.height, settings.zoom)
-        val next = Bitmap.createBitmap(screen, source.left, source.top, source.width, source.height)
-        if (isNearlyBlack(next)) {
-            next.recycle()
+        MagnifierGeometry.sourceRect(screen.width, screen.height, settings.zoom, sourceRect)
+        if (isNearlyBlack(screen, sourceRect)) {
+            screen.recycle()
             displayedBitmap?.recycle()
             displayedBitmap = null
             imageView?.setImageDrawable(null)
             statusView?.text = "Ce contenu protégé ne peut pas être agrandi. Utilisez la loupe Android."
             return
         }
-        val previous = displayedBitmap
-        displayedBitmap = next
-        imageView?.setImageBitmap(next)
-        previous?.recycle()
+        val view = imageView ?: run { screen.recycle(); return }
+        val output = ensureOutputBitmap(sourceRect.width, sourceRect.height)
+        androidSourceRect.set(sourceRect.left, sourceRect.top, sourceRect.right, sourceRect.bottom)
+        destinationRect.set(0, 0, output.width, output.height)
+        renderCanvas.drawBitmap(screen, androidSourceRect, destinationRect, renderPaint)
+        screen.recycle()
+        if (view.drawable == null) view.setImageBitmap(output) else view.invalidate()
         zoomView?.text = "${settings.zoom}×"
     }
 
@@ -184,9 +203,7 @@ internal class VueConfortMagnifierController(
         if (!paused) scheduleCapture(100)
     }
 
-    private fun captureErrorMessage(throwable: Throwable): String = when (
-        (throwable as? ScreenshotException)?.errorCode
-    ) {
+    private fun captureErrorMessage(errorCode: Int?, throwable: Throwable?): String = when (errorCode) {
         AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT -> "Capture trop rapprochée — appuyez sur Reprendre"
         AccessibilityService.ERROR_TAKE_SCREENSHOT_INVALID_DISPLAY -> "Écran indisponible — utilisez la loupe Android"
         AccessibilityService.ERROR_TAKE_SCREENSHOT_NO_ACCESSIBILITY_ACCESS -> "Accès refusé — utilisez la loupe Android"
@@ -194,15 +211,15 @@ internal class VueConfortMagnifierController(
         else -> "Contenu protégé ou capture indisponible — utilisez la loupe Android"
     }
 
-    private fun isNearlyBlack(bitmap: Bitmap): Boolean {
+    private fun isNearlyBlack(bitmap: Bitmap, area: MagnifierRect): Boolean {
         var dark = 0
         var sampled = 0
-        val stepX = (bitmap.width / 12).coerceAtLeast(1)
-        val stepY = (bitmap.height / 12).coerceAtLeast(1)
-        var y = stepY / 2
-        while (y < bitmap.height) {
-            var x = stepX / 2
-            while (x < bitmap.width) {
+        val stepX = (area.width / 12).coerceAtLeast(1)
+        val stepY = (area.height / 12).coerceAtLeast(1)
+        var y = area.top + stepY / 2
+        while (y < area.bottom) {
+            var x = area.left + stepX / 2
+            while (x < area.right) {
                 val pixel = bitmap.getPixel(x, y)
                 if (Color.red(pixel) < 6 && Color.green(pixel) < 6 && Color.blue(pixel) < 6) dark++
                 sampled++
@@ -217,7 +234,7 @@ internal class VueConfortMagnifierController(
         val elapsed = (SystemClock.elapsedRealtime() - startedAt).coerceAtLeast(1)
         val fps = frameCount * 1000f / elapsed
         val latency = if (frameCount == 0L) 0 else latencyTotalMs / frameCount
-        Log.i(TAG, "elapsedMs=$elapsed frames=$frameCount fps=$fps avgLatencyMs=$latency errors=$errorCount")
+        Log.i(TAG, "elapsedMs=$elapsed frames=$frameCount fps=$fps avgLatencyMs=$latency errors=$errorCount intervalMs=$captureIntervalMs")
     }
 
     fun close() {
@@ -237,6 +254,18 @@ internal class VueConfortMagnifierController(
         zoomView = null
         displayedBitmap?.recycle()
         displayedBitmap = null
+        renderCanvas.setBitmap(null)
+    }
+
+    private fun ensureOutputBitmap(width: Int, height: Int): Bitmap {
+        displayedBitmap?.takeIf { !it.isRecycled && it.width == width && it.height == height }?.let {
+            return it
+        }
+        displayedBitmap?.recycle()
+        return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also {
+            displayedBitmap = it
+            renderCanvas.setBitmap(it)
+        }
     }
 
     private fun addOverlay(view: View, width: Int, height: Int, gravity: Int) {
@@ -284,5 +313,14 @@ internal class VueConfortMagnifierController(
         Point().also { windowManager.defaultDisplay.getRealSize(it) }.let { it.x to it.y }
     }
 
-    companion object { private const val TAG = "VueConfortMagnifier" }
+    companion object {
+        private const val TAG = "VueConfortMagnifier"
+        private const val QUALITY_INTERVAL_MS = 400L
+        private const val BALANCED_INTERVAL_MS = 450L
+        private const val BATTERY_INTERVAL_MS = 1_000L
+        private const val ADAPTIVE_STEP_MS = 10L
+        private const val BACKOFF_STEP_MS = 50L
+        private const val SUCCESS_WINDOW = 600
+        private const val MIN_DELAY_MS = 20L
+    }
 }

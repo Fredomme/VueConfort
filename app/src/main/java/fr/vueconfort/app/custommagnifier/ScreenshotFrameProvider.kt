@@ -8,9 +8,12 @@ import android.view.Display
 internal class ScreenshotFrameProvider(
     private val service: AccessibilityService
 ) {
-    fun captureOnce(callback: (Result<Bitmap>) -> Unit) {
+    fun captureOnce(
+        onFrame: (Bitmap) -> Unit,
+        onFailure: (errorCode: Int?, throwable: Throwable?) -> Unit
+    ) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            callback(Result.failure(UnsupportedOperationException("takeScreenshot requires Android 11")))
+            onFailure(null, UnsupportedOperationException("takeScreenshot requires Android 11"))
             return
         }
         service.takeScreenshot(
@@ -22,21 +25,20 @@ internal class ScreenshotFrameProvider(
                     try {
                         val hardwareBitmap = Bitmap.wrapHardwareBuffer(buffer, result.colorSpace)
                             ?: error("HardwareBuffer could not be wrapped")
-                        callback(Result.success(hardwareBitmap.copy(Bitmap.Config.ARGB_8888, false)))
+                        // A software copy is required: retaining the hardware-backed Bitmap until
+                        // the next frame makes subsequent takeScreenshot() calls fail on the S25.
+                        onFrame(hardwareBitmap.copy(Bitmap.Config.ARGB_8888, false))
                     } catch (throwable: Throwable) {
-                        callback(Result.failure(throwable))
+                        onFailure(null, throwable)
                     } finally {
                         buffer.close()
                     }
                 }
 
                 override fun onFailure(errorCode: Int) {
-                    callback(Result.failure(ScreenshotException(errorCode)))
+                    onFailure(errorCode, null)
                 }
             }
         )
     }
 }
-
-internal class ScreenshotException(val errorCode: Int) :
-    IllegalStateException("Accessibility screenshot failed: $errorCode")
