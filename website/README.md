@@ -24,6 +24,10 @@ npm run preview
 
 La sortie publiable se trouve dans `dist/`.
 
+Pour Cloudflare Pages, le projet utilise le dossier racine `website`, la commande
+`npm run build` et la sortie `dist`. `wrangler.jsonc` permet également un déploiement
+direct du résultat compilé avec Wrangler.
+
 ## Architecture
 
 - `src/content/site.ts` : contenu français/anglais et correspondance des routes;
