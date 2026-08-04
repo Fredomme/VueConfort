@@ -28,11 +28,13 @@ import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import fr.vueconfort.app.BuildConfig
 import fr.vueconfort.app.R
 import fr.vueconfort.app.core.CoreActionReceiver
 import fr.vueconfort.app.core.ErrorCategory
 import fr.vueconfort.app.core.ErrorReporter
 import fr.vueconfort.app.core.VueConfortCoreState
+import fr.vueconfort.app.custommagnifier.VueConfortMagnifierController
 import fr.vueconfort.app.data.OverlayPreferences
 import fr.vueconfort.app.data.VisualProfileRepository
 import fr.vueconfort.app.model.AssistProfile
@@ -69,6 +71,7 @@ class ScreenMagnifierService : AccessibilityService() {
     private var controlView: View? = null
     private var panelView: View? = null
     private var readerView: View? = null
+    private var customMagnifierController: VueConfortMagnifierController? = null
     private var controlParams: WindowManager.LayoutParams? = null
     private var panelParams: WindowManager.LayoutParams? = null
     private var readerParams: WindowManager.LayoutParams? = null
@@ -187,6 +190,7 @@ class ScreenMagnifierService : AccessibilityService() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        customMagnifierController?.onConfigurationChanged()
         controlView?.post { clampAndUpdate(controlView, controlParams, save = true) }
         panelView?.post { clampAndUpdate(panelView, panelParams, save = true) }
     }
@@ -387,6 +391,34 @@ class ScreenMagnifierService : AccessibilityService() {
             panel.addView(this, panelButtonLayout())
         }
         panel.addView(createButton("Lire") { showReader() }, panelButtonLayout())
+        if (BuildConfig.DEBUG) {
+            panel.addView(label(getString(R.string.custom_magnifier_mode), 14f), matchWidthLayout())
+            panel.addView(
+                createButton(getString(R.string.custom_magnifier_android)) {
+                    customMagnifierController?.close()
+                    customMagnifierController = null
+                    enableMagnification()
+                },
+                panelButtonLayout()
+            )
+            panel.addView(
+                createButton(getString(R.string.custom_magnifier_name)) {
+                    disableMagnification()
+                    removePanel()
+                    customMagnifierController = VueConfortMagnifierController(
+                        service = this@ScreenMagnifierService,
+                        windowManager = windowManager,
+                        onClosed = {
+                            customMagnifierController = null
+                            if (!releasing && controlView == null && panelView == null) showFloatingButton()
+                        }
+                    ).also { prototype ->
+                        prototype.requestStart()
+                    }
+                },
+                panelButtonLayout()
+            )
+        }
         panel.addView(profileLabel, matchWidthLayout())
         panel.addView(profileList, matchWidthLayout())
         LinearLayout(this).apply {
@@ -544,6 +576,8 @@ class ScreenMagnifierService : AccessibilityService() {
         removePanel()
         removeControl()
         removeReader()
+        customMagnifierController?.close()
+        customMagnifierController = null
         VueConfortCoreState.overlayActive = false
         if (::windowManager.isInitialized) runCatching { disableMagnification() }
     }
