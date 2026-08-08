@@ -58,4 +58,11 @@
     <string name="custom_magnifier_disclosure">Pour afficher une zone agrandie, VueConfort analyse temporairement l’image visible à l’écran à l’aide du service d’accessibilité Android. L’image est traitée uniquement sur cet appareil, en mémoire, puis immédiatement supprimée. Elle n’est ni enregistrée, ni transmise. Les écrans sécurisés ne sont pas capturés.</string>
     <string name="custom_magnifier_activate">Activer la Loupe VueConfort</string>
     <plurals name="attempt_count"><item quantity="one">%d essai</item><item quantity="other">%d essais</item></plurals>
+    <string name="first_launch_title">Essayez la loupe immédiatement</string>
+    <string name="first_launch_summary">Activez VueConfort en quelques secondes. La barre flottante apparaîtra dès que le service d’accessibilité sera autorisé.</string>
+    <string name="first_launch_accessibility_disclosure">VueConfort utilise le service d’accessibilité pour afficher la barre flottante, contrôler le grossissement Android, détecter l’application active pour les profils automatiques et extraire le texte accessible uniquement lorsque vous choisissez Lire. Ces informations sont traitées localement sur cet appareil, ne sont pas vendues et ne sont pas transmises à un serveur.</string>
+    <string name="first_launch_enable_magnifier">Activer la loupe</string>
+    <string name="first_launch_continue_without">Continuer sans activer la loupe</string>
+    <string name="first_launch_advanced_setup">Configuration avancée</string>
+    <string name="home_magnifier_primary">Activer la loupe</string>
 </resources>

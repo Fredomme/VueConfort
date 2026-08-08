@@ -25,7 +25,7 @@ import fr.vueconfort.app.ui.screens.QuickReadingSetupScreen
 import fr.vueconfort.app.ui.screens.ReadingScreen
 import fr.vueconfort.app.ui.screens.SettingsScreen
 import fr.vueconfort.app.ui.screens.CoreStatusScreen
-import fr.vueconfort.app.ui.screens.WelcomeScreen
+import fr.vueconfort.app.ui.screens.FirstLaunchScreen
 import fr.vueconfort.app.ui.screens.GuidedSetupScreen
 import fr.vueconfort.app.ui.screens.HelpScreen
 import fr.vueconfort.app.ui.screens.AboutScreen
@@ -111,6 +111,9 @@ fun VueConfortApp(
                     },
                     onHelp = {
                         navController.navigate(AppRoute.Help.route)
+                    },
+                    onMagnifierSetup = {
+                        navController.navigate(AppRoute.Welcome.route)
                     }
                 )
             }
@@ -308,10 +311,22 @@ fun VueConfortApp(
             }
 
             composable(route = AppRoute.Welcome.route) {
-                WelcomeScreen(
-                    onStart = { navController.navigate(AppRoute.Setup.route) },
-                    onDiscover = { navController.navigate(AppRoute.Help.route) },
-                    onPrivacy = { navController.navigate(AppRoute.Privacy.route) }
+                FirstLaunchScreen(
+                    onReady = {
+                        mainViewModel.setOnboardingCompleted(true)
+
+                        navController.navigate(AppRoute.Home.route) {
+                            popUpTo(AppRoute.Welcome.route) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                    onAdvancedSetup = {
+                        navController.navigate(AppRoute.Setup.route)
+                    },
+                    onPrivacy = {
+                        navController.navigate(AppRoute.Privacy.route)
+                    }
                 )
             }
 

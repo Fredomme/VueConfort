@@ -21,11 +21,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import fr.vueconfort.app.R
+import fr.vueconfort.app.core.VueConfortCoreState
+import fr.vueconfort.app.magnifier.ScreenMagnifierService
 import fr.vueconfort.app.model.VisualProfile
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,8 +43,11 @@ fun HomeScreen(
     onSettings: () -> Unit,
     onCoreStatus: () -> Unit,
     onHelp: () -> Unit,
+    onMagnifierSetup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -81,6 +87,31 @@ fun HomeScreen(
             Spacer(
                 modifier = Modifier.height(4.dp)
             )
+
+            Button(
+                onClick = {
+                    if (
+                        VueConfortCoreState
+                            .isAccessibilityEnabled(context)
+                    ) {
+                        ScreenMagnifierService
+                            .handleExternalAction(
+                                ScreenMagnifierService
+                                    .ACTION_MAGNIFIER_ENABLE
+                            )
+                    } else {
+                        onMagnifierSetup()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    stringResource(
+                        R.string.home_magnifier_primary
+                    )
+                )
+            }
 
             Button(
                 onClick = onVisualAssessment,

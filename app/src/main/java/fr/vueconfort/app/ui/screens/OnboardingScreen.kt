@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +64,146 @@ fun WelcomeScreen(
         Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.start)) }
         OutlinedButton(onClick = onDiscover, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.discover_features)) }
         OutlinedButton(onClick = onPrivacy, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.privacy_policy)) }
+    }
+}
+
+@Composable
+fun FirstLaunchScreen(
+    onReady: () -> Unit,
+    onAdvancedSetup: () -> Unit,
+    onPrivacy: () -> Unit
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var refresh by remember { mutableIntStateOf(0) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) refresh++
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    @Suppress("UNUSED_EXPRESSION")
+    refresh
+
+    val accessibility =
+        VueConfortCoreState.isAccessibilityEnabled(context)
+
+    val notifications =
+        Build.VERSION.SDK_INT < 33 ||
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+    val openAccessibility = {
+        context.startActivity(
+            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        )
+    }
+
+    val notificationLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) {
+            refresh++
+            openAccessibility()
+        }
+
+    LaunchedEffect(accessibility) {
+        if (accessibility) {
+            onReady()
+        }
+    }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        Text(
+            stringResource(R.string.app_name),
+            style = androidx.compose.material3.MaterialTheme.typography.displaySmall
+        )
+
+        Text(
+            stringResource(R.string.first_launch_title),
+            style = androidx.compose.material3.MaterialTheme.typography.headlineSmall
+        )
+
+        Text(stringResource(R.string.first_launch_summary))
+
+        Card {
+            Column(
+                Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    stringResource(R.string.setup_accessibility_title),
+                    style = androidx.compose.material3.MaterialTheme.typography.titleMedium
+                )
+
+                Text(
+                    stringResource(
+                        R.string.first_launch_accessibility_disclosure
+                    )
+                )
+            }
+        }
+
+        Button(
+            onClick = {
+                if (notifications) {
+                    openAccessibility()
+                } else if (Build.VERSION.SDK_INT >= 33) {
+                    notificationLauncher.launch(
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
+                } else {
+                    openAccessibility()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                stringResource(
+                    R.string.first_launch_enable_magnifier
+                )
+            )
+        }
+
+        OutlinedButton(
+            onClick = onReady,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                stringResource(
+                    R.string.first_launch_continue_without
+                )
+            )
+        }
+
+        OutlinedButton(
+            onClick = onAdvancedSetup,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                stringResource(
+                    R.string.first_launch_advanced_setup
+                )
+            )
+        }
+
+        OutlinedButton(
+            onClick = onPrivacy,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.privacy_policy))
+        }
     }
 }
 

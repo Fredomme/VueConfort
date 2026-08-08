@@ -20,4 +20,11 @@
     <string name="custom_magnifier_disclosure">To display a magnified area, VueConfort temporarily analyses the image visible on screen using the Android accessibility service. The image is processed only on this device, in memory, then immediately discarded. It is neither saved nor transmitted. Secure screens are not captured.</string>
     <string name="custom_magnifier_activate">Enable VueConfort Magnifier</string>
     <plurals name="attempt_count"><item quantity="one">%d attempt</item><item quantity="other">%d attempts</item></plurals>
+    <string name="first_launch_title">Try the magnifier now</string>
+    <string name="first_launch_summary">Enable VueConfort in seconds. The floating bar appears as soon as the accessibility service is allowed.</string>
+    <string name="first_launch_accessibility_disclosure">VueConfort uses the accessibility service to show the floating bar, control Android magnification, detect the active app for automatic profiles, and extract accessible text only when you choose Read. This information is processed locally on this device, is not sold, and is not transmitted to a server.</string>
+    <string name="first_launch_enable_magnifier">Enable magnifier</string>
+    <string name="first_launch_continue_without">Continue without enabling magnifier</string>
+    <string name="first_launch_advanced_setup">Advanced setup</string>
+    <string name="home_magnifier_primary">Enable magnifier</string>
 </resources>

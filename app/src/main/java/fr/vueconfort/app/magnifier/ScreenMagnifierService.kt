@@ -761,6 +761,21 @@ class ScreenMagnifierService : AccessibilityService() {
     private fun handleAction(action: String) {
         when (action) {
             ACTION_READ -> showReader()
+
+            ACTION_MAGNIFIER_ENABLE -> {
+                corePaused = false
+
+                if (
+                    controlView == null &&
+                    panelView == null
+                ) {
+                    showFloatingButton()
+                }
+
+                enableMagnification()
+                showPersistentNotification()
+            }
+
             ACTION_PAUSE, ACTION_TOGGLE -> {
                 corePaused = !corePaused
                 if (corePaused) {
@@ -1058,6 +1073,7 @@ class ScreenMagnifierService : AccessibilityService() {
         const val ACTION_PAUSE = "fr.vueconfort.app.action.PAUSE"
         const val ACTION_CLOSE = "fr.vueconfort.app.action.CLOSE"
         const val ACTION_TOGGLE = "fr.vueconfort.app.action.TOGGLE"
+        const val ACTION_MAGNIFIER_ENABLE = "fr.vueconfort.app.action.MAGNIFIER_ENABLE"
         private const val CHANNEL_ID = "vueconfort_state"
         private const val NOTIFICATION_ID = 4107
 
