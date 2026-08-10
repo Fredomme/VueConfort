@@ -33,7 +33,7 @@ Voix/texte : « Le texte accessible est extrait uniquement à la demande pour ê
 
 00:51–00:58 — Limites et confidentialité
 Plan : afficher l’écran Confidentialité de VueConfort.
-Voix/texte : « VueConfort n’utilise ni capture d’écran, ni enregistrement, ni serveur, ni publicité, ni transmission de contenu. Certaines applications peuvent ne fournir aucun texte accessible. »
+Voix/texte : « La version Production de VueConfort utilise le grossissement natif Android, sans capture d’écran, enregistrement, serveur, publicité ni transmission de contenu. Certaines applications peuvent ne fournir aucun texte accessible. »
 
 00:58–01:00 — Fin
 Plan : logo VueConfort et adresse vueconfort.fr.

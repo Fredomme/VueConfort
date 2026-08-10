@@ -4,6 +4,8 @@
 
 VueConfort est une application d’assistance visuelle destinée à améliorer temporairement le confort de lecture. Son service `ScreenMagnifierService` est une fonction principale, visible et déclenchée après activation volontaire dans les réglages Android.
 
+Dans cette déclaration, **Loupe VueConfort** désigne exclusivement le grossissement natif Android en mode fenêtre piloté par `MagnificationController`. Le prototype R&D par capture d’écran appartient uniquement au variant Debug et est absent du binaire Release soumis à Google Play.
+
 ## Fonctions réalisées
 
 - afficher une barre et un lecteur au moyen de `TYPE_ACCESSIBILITY_OVERLAY`;
@@ -17,7 +19,7 @@ Le service écoute les changements de fenêtre, de contenu et de défilement. Il
 
 - aucune activation automatique du service;
 - aucun clic, geste, saisie ou achat automatisé;
-- aucune capture d’écran, MediaProjection, OCR global ou enregistrement;
+- la Release n’embarque et n’utilise aucune capture d’écran, MediaProjection, OCR global ou enregistrement;
 - aucun contournement de `FLAG_SECURE` ou d’un écran protégé;
 - aucune collecte de mot de passe, frappe, message, contact ou contenu d’application;
 - aucun envoi réseau, serveur, publicité, analytique ou profilage commercial.

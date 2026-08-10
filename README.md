@@ -20,6 +20,10 @@ VueConfort ne corrige pas la vue et ne remplace pas des lunettes. L’applicatio
 - Loupe inter-applications fondée sur le grossissement natif Android, après activation manuelle du service d’accessibilité
 - Lecture locale avec le profil visuel, sans capture de l’écran
 
+### Terminologie de la loupe
+
+La **Loupe VueConfort** désigne la fonction Production qui pilote le grossissement natif Android en mode fenêtre avec `MagnificationController`. Un **prototype expérimental de loupe par capture**, distinct et réservé au variant Debug, est conservé uniquement pour la R&D. La Release n’embarque pas son code de capture.
+
 ## Ouvrir le projet
 
 1. Installer Android Studio sur le Mac.
@@ -35,7 +39,7 @@ VueConfort ne corrige pas la vue et ne remplace pas des lunettes. L’applicatio
 - Android ne fournit pas d’accès direct public à tous les sous-menus Samsung.
 - Le mode lecture accepte pour l’instant du texte collé ou saisi manuellement.
 - La loupe agrandit via Android ; elle n’applique pas globalement netteté, gamma, température ou contraste.
-- Aucune capture MediaProjection et aucun enregistrement d’écran ne sont utilisés.
+- La Release n’utilise aucune capture d’écran, MediaProjection ou enregistrement d’écran.
 - Le fonctionnement physique doit encore être validé sur Galaxy S25 et la version de One UI installée.
 
 ## Publication

@@ -1,6 +1,8 @@
-# Loupe VueConfort demi-écran — prototype Debug
+# Prototype expérimental de loupe par capture — Debug uniquement
 
-Prototype expérimental validé le 4 août 2026 sur Galaxy S25 SM-S931B sous Android 16. Il est distribué uniquement par le variant Debug `fr.vueconfort.app.debug` et ne modifie pas l’AAB Release.
+Ce prototype R&D est distinct de la **Loupe VueConfort** officielle, laquelle utilise le grossissement natif Android avec `MagnificationController` et reste une fonction essentielle de Production.
+
+Le prototype par capture a été validé le 4 août 2026 sur Galaxy S25 SM-S931B sous Android 16. Son code, ses ressources et sa capacité `canTakeScreenshot` sont réservés au variant Debug `fr.vueconfort.app.debug` et sont absents de l’AAB Release.
 
 ## Fonctionnement
 
@@ -11,8 +13,8 @@ Prototype expérimental validé le 4 août 2026 sur Galaxy S25 SM-S931B sous And
 - zoom borné de 1,5× à 4×, dernier niveau conservé localement ;
 - cadence prudente de 2 images/seconde ;
 - pause, reprise et fermeture explicites ;
-- arrêt préalable de la loupe Android native ;
-- retour à la loupe Android depuis le sélecteur du panneau.
+- arrêt préalable de la Loupe VueConfort officielle pendant l’essai du prototype ;
+- retour au grossissement natif Android depuis le sélecteur du panneau Debug.
 
 Aucune image n’est écrite dans `cacheDir`, `filesDir`, MediaStore ou un autre stockage. Il n’existe ni MediaProjection, VirtualDisplay, ImageReader, réseau, OCR ou télémétrie.
 

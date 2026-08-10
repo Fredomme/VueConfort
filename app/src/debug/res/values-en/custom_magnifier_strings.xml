@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="custom_magnifier_mode">R&amp;D prototype</string>
+    <string name="custom_magnifier_android">VueConfort Magnifier — native Android magnification</string>
+    <string name="custom_magnifier_name">Experimental screenshot-based magnifier prototype</string>
+    <string name="custom_magnifier_disclosure">This R&amp;D prototype temporarily analyses the visible screen image with the Android accessibility service. The image remains in memory on this device and is immediately discarded. It is neither saved nor transmitted. Secure screens are not captured.</string>
+    <string name="custom_magnifier_activate">Enable experimental prototype</string>
+</resources>

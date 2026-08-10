@@ -1,5 +1,11 @@
 # Changelog
 
+## Non publié
+
+- distinction explicite entre la Loupe VueConfort Production, fondée sur le grossissement natif Android, et le prototype R&D par capture;
+- isolation physique du prototype de capture dans les source sets Debug; aucun symbole `takeScreenshot` ou `custommagnifier` n’est destiné au binaire Release;
+- conservation sans changement fonctionnel du service d’accessibilité, du grossissement natif, de l’overlay, des profils, du lecteur, de la notification et de la tuile rapide.
+
 ## 1.0.0 — 2026-08-04
 
 ### Fonctionnalités principales

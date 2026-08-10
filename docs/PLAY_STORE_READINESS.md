@@ -11,7 +11,8 @@
 - Permission runtime : `POST_NOTIFICATIONS` sur Android 13+
 - Services protégés : service d’accessibilité avec `BIND_ACCESSIBILITY_SERVICE` et tuile rapide avec `BIND_QUICK_SETTINGS_TILE`
 - Overlay : `TYPE_ACCESSIBILITY_OVERLAY`, sans permission `SYSTEM_ALERT_WINDOW`
-- Capture d’écran : aucune ; pas de MediaProjection, VirtualDisplay, ImageReader ou OCR global
+- Loupe VueConfort : grossissement natif Android en mode fenêtre avec `MagnificationController`, fonction Production essentielle
+- Capture d’écran Release : aucune ; le prototype R&D utilisant `takeScreenshot` est physiquement limité au variant Debug ; pas de MediaProjection, VirtualDisplay, ImageReader ou OCR global
 - Réseau, compte, publicité, analytique : absents
 - Données : profils, réglages, calibrations, résultats/historique et règles stockés localement ; texte accessible utilisé temporairement à la demande
 - Sauvegarde Android : désactivée dans le manifeste

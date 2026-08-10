@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="custom_magnifier_mode">Prototype R&amp;D</string>
+    <string name="custom_magnifier_android">Loupe VueConfort — grossissement natif Android</string>
+    <string name="custom_magnifier_name">Prototype expérimental de loupe par capture</string>
+    <string name="custom_magnifier_disclosure">Ce prototype R&amp;D analyse temporairement l’image visible à l’écran avec le service d’accessibilité Android. L’image reste en mémoire sur cet appareil, puis est immédiatement supprimée. Elle n’est ni enregistrée ni transmise. Les écrans sécurisés ne sont pas capturés.</string>
+    <string name="custom_magnifier_activate">Activer le prototype expérimental</string>
+</resources>

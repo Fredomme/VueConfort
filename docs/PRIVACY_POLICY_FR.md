@@ -10,11 +10,11 @@ L’application peut traiter les profils et réglages, les calibrations, les ré
 
 ## Stockage et transmission
 
-Les réglages et résultats sont conservés localement dans le stockage privé de l’application. Le texte accessible demandé pour le lecteur est utilisé temporairement et localement ; il n’est ni sauvegardé dans l’historique, ni transmis. VueConfort ne capture pas l’écran et n’enregistre pas les mots de passe. Les sauvegardes Android de l’application sont désactivées.
+Les réglages et résultats sont conservés localement dans le stockage privé de l’application. Le texte accessible demandé pour le lecteur est utilisé temporairement et localement ; il n’est ni sauvegardé dans l’historique, ni transmis. La version Production de VueConfort ne capture pas l’écran et n’enregistre pas les mots de passe. Les sauvegardes Android de l’application sont désactivées.
 
 ## Service d’accessibilité
 
-Le service sert à afficher les commandes d’assistance, contrôler le grossissement Android, détecter l’application active pour les règles de profil et extraire à la demande le texte accessible pour le lecteur. Certaines applications, images, vidéos, jeux, vues Web ou fenêtres protégées peuvent ne fournir aucun texte. VueConfort ne contourne pas ces protections.
+Le service sert à afficher les commandes d’assistance et la Loupe VueConfort fondée sur le grossissement natif Android, détecter l’application active pour les règles de profil et extraire à la demande le texte accessible pour le lecteur. Certaines applications, images, vidéos, jeux, vues Web ou fenêtres protégées peuvent ne fournir aucun texte. VueConfort ne contourne pas ces protections.
 
 ## Tests visuels
 
