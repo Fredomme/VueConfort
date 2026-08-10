@@ -10,7 +10,7 @@ L’application peut traiter les profils et réglages, les calibrations, les ré
 
 ## Stockage et transmission
 
-Les réglages et résultats sont conservés localement dans le stockage privé de l’application. Le texte accessible demandé pour le lecteur est utilisé temporairement et localement ; il n’est ni sauvegardé dans l’historique, ni transmis. La version Production de VueConfort ne capture pas l’écran et n’enregistre pas les mots de passe. Les sauvegardes Android de l’application sont désactivées.
+Les réglages et résultats sont conservés localement dans le stockage privé de l’application. Le texte accessible demandé pour le lecteur est utilisé temporairement et localement ; il n’est ni sauvegardé dans l’historique, ni transmis. Le variant Release de VueConfort ne capture pas l’écran et n’enregistre pas les mots de passe. Les sauvegardes Android de l’application sont désactivées.
 
 ## Service d’accessibilité
 

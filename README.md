@@ -1,4 +1,4 @@
-# VueConfort 1.0.0 — assistance visuelle Android
+# VueConfort 1.0.1 — assistance visuelle Android
 
 Application Android personnelle destinée aux personnes qui ont du mal à lire sur écran mais n’ont pas — ou pas encore — de lunettes.
 
@@ -6,7 +6,7 @@ Application Android personnelle destinée aux personnes qui ont du mal à lire s
 
 VueConfort ne corrige pas la vue et ne remplace pas des lunettes. L’application recherche des réglages d’affichage plus confortables : taille, graisse, interlignage, fond et contraste.
 
-## Fonctions de la version 1.0.0
+## Fonctions de la version 1.0.1
 
 - Questionnaire basé sur les gênes quotidiennes
 - Test comparatif en sept étapes
@@ -22,7 +22,7 @@ VueConfort ne corrige pas la vue et ne remplace pas des lunettes. L’applicatio
 
 ### Terminologie de la loupe
 
-La **Loupe VueConfort** désigne la fonction Production qui pilote le grossissement natif Android en mode fenêtre avec `MagnificationController`. Un **prototype expérimental de loupe par capture**, distinct et réservé au variant Debug, est conservé uniquement pour la R&D. La Release n’embarque pas son code de capture.
+La **Loupe VueConfort** désigne la fonction Release qui pilote le grossissement natif Android en mode fenêtre avec `MagnificationController`. Un **prototype expérimental de loupe par capture**, distinct et réservé au variant Debug, est conservé uniquement pour la R&D. La Release n’embarque pas son code de capture.
 
 ## Ouvrir le projet
 
@@ -35,12 +35,13 @@ La **Loupe VueConfort** désigne la fonction Production qui pilote le grossissem
 
 ## Limites actuelles
 
-- Le build Release doit encore être validé physiquement sur Galaxy S25 et Galaxy A53.
+- La Release 1.0.1 est diffusée uniquement sur la piste Google Play de test fermé Alpha ; elle n’est pas disponible publiquement.
+- Une validation physique a été effectuée sur Galaxy S25 ; la couverture Galaxy A53 et d’autres appareils reste à compléter.
 - Android ne fournit pas d’accès direct public à tous les sous-menus Samsung.
-- Le mode lecture accepte pour l’instant du texte collé ou saisi manuellement.
+- Le lecteur utilise localement le texte d’accessibilité explicitement demandé ; certaines applications n’exposent aucun texte exploitable.
 - La loupe agrandit via Android ; elle n’applique pas globalement netteté, gamma, température ou contraste.
 - La Release n’utilise aucune capture d’écran, MediaProjection ou enregistrement d’écran.
-- Le fonctionnement physique doit encore être validé sur Galaxy S25 et la version de One UI installée.
+- Le verrouillage, la veille, la rotation et les restrictions d’arrière-plan One UI peuvent interrompre temporairement le grossissement ou l’overlay et nécessitent des essais continus.
 
 ## Publication
 

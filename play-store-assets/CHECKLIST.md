@@ -5,18 +5,18 @@
 - [x] AAB Release généré
 - [x] Signature locale valide
 - [x] Package `fr.vueconfort.app` vérifié
-- [x] Version 1.0.0 / code 1 vérifiée
+- [x] Version 1.0.1 / code 2 vérifiée
 - [x] Lint Release sans erreur
 - [x] Tests unitaires réussis
-- [ ] Vérifier que le code de version 1 n’a jamais été importé dans Play Console
-- [ ] Valider Play App Signing et la clé d’import
+- [x] Test fermé Alpha 1.0.1 / code 2 actif pour les testeurs autorisés
+- [x] Play App Signing actif pour la version diffusée
 
 ## Fiche Play Store
 
 - [x] Icône Play Store 512 × 512 préparée
 - [x] Sources d’icône applicative préparées
 - [x] Feature Graphic 1024 × 500 préparée
-- [ ] Remplacer l’icône système du binaire par l’icône applicative validée lors d’une prochaine version autorisée
+- [x] Icône officielle intégrée au binaire 1.0.1
 - [x] Captures d’écran téléphone réelles en français (Galaxy S25 SM-S931B)
 - [x] Texte court FR
 - [x] Description courte FR
@@ -45,10 +45,10 @@
 
 ## Tests et publication
 
-- [ ] Testeurs internes ajoutés
-- [ ] AAB importé dans la piste Test interne
-- [ ] Déploiement du test interne
-- [ ] Installation depuis Google Play sur Galaxy S25
+- [x] Testeurs autorisés ajoutés à la piste fermée
+- [x] AAB 1.0.1 / code 2 importé et accepté
+- [x] Déploiement du test fermé Alpha actif
+- [ ] Installation et parcours complets depuis Google Play à poursuivre sur les appareils ciblés
 - [x] Test local Release : onboarding, notification, service, overlay, grossissement, lecteur et profils
 - [ ] Test verrouillage/déverrouillage et veille One UI
 - [ ] Test fermé si requis pour l’accès à la production

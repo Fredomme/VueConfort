@@ -1,5 +1,7 @@
 # AUDIT VUE CONFORT
 
+> DOCUMENT HISTORIQUE — photographie technique du 30 juillet 2026. Il ne décrit pas l’état courant ; consulter `docs/PROJECT_STATUS_2026-08-10.md`.
+
 Date : Thu Jul 30 14:11:37 CEST 2026
 Projet : /Users/ribeirofrederic/Desktop/VueConfort-S25
 

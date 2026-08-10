@@ -10,7 +10,7 @@ The app may process profiles and settings, calibrations, visual screening result
 
 ## Storage and transmission
 
-Settings and results are kept locally in the app’s private storage. Accessibility text requested for the reader is used temporarily and locally; it is neither stored in history nor transmitted. The production version of VueConfort does not capture the screen or record passwords. Android app backup is disabled.
+Settings and results are kept locally in the app’s private storage. Accessibility text requested for the reader is used temporarily and locally; it is neither stored in history nor transmitted. The VueConfort Release variant does not capture the screen or record passwords. Android app backup is disabled.
 
 ## Accessibility service
 

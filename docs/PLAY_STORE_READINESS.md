@@ -4,14 +4,15 @@
 
 - Nom : VueConfort
 - Package : `fr.vueconfort.app`
-- Version : `0.1.0` (`versionCode` 1)
+- Version : `1.0.1` (`versionCode` 2)
+- Diffusion : piste Google Play de test fermé Alpha, réservée aux testeurs autorisés ; aucune publication Production
 - SDK minimal : 28
 - SDK cible : 36
 - Langues : français par défaut et anglais selon la langue Android
 - Permission runtime : `POST_NOTIFICATIONS` sur Android 13+
 - Services protégés : service d’accessibilité avec `BIND_ACCESSIBILITY_SERVICE` et tuile rapide avec `BIND_QUICK_SETTINGS_TILE`
 - Overlay : `TYPE_ACCESSIBILITY_OVERLAY`, sans permission `SYSTEM_ALERT_WINDOW`
-- Loupe VueConfort : grossissement natif Android en mode fenêtre avec `MagnificationController`, fonction Production essentielle
+- Loupe VueConfort : grossissement natif Android en mode fenêtre avec `MagnificationController`, fonction essentielle du variant Release
 - Capture d’écran Release : aucune ; le prototype R&D utilisant `takeScreenshot` est physiquement limité au variant Debug ; pas de MediaProjection, VirtualDisplay, ImageReader ou OCR global
 - Réseau, compte, publicité, analytique : absents
 - Données : profils, réglages, calibrations, résultats/historique et règles stockés localement ; texte accessible utilisé temporairement à la demande
@@ -23,17 +24,12 @@ L’usage doit être déclaré précisément dans Play Console : commandes flott
 
 ## Éléments restant nécessaires
 
-- Remplacer l’icône Android générique par une icône adaptative finale.
-- Définir l’adresse de contact et l’URL publique de la politique de confidentialité.
-- Préparer les textes de fiche en français et anglais.
-- Préparer des captures téléphone montrant accueil, configuration, barre, profils, lecteur et confidentialité.
-- Préparer l’icône Play 512 × 512 et la bannière 1024 × 500.
-- Ouvrir/configurer le compte développeur et compléter les informations éditeur.
-- Générer un AAB `release`, créer et protéger la clé de signature, puis configurer Play App Signing.
-- Compléter les formulaires Data Safety, contenu de l’application, public cible et classification.
-- Compléter la déclaration Accessibility API et fournir la justification et la vidéo demandées.
+- Conserver l’icône officielle intégrée et vérifier ses masques sur les appareils ciblés.
+- Maintenir les coordonnées de contact et l’URL publique de confidentialité à jour.
+- Maintenir les textes FR/EN et les captures réelles cohérents avec le binaire diffusé.
+- Revalider Data Safety, contenu, public cible, classification et déclaration Accessibility API avant toute future demande de Production.
 - Vérifier les exigences de niveau d’API cible au moment de la publication.
-- Effectuer des essais réels sur Galaxy S25, Galaxy A53 et au moins un Android de référence, en français et anglais.
+- Poursuivre les essais réels sur Galaxy S25, Galaxy A53 et au moins un Android de référence, en français et anglais.
 
 ## Validation recommandée avant production
 

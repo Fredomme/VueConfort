@@ -66,9 +66,9 @@ La liste de diffusion `VueConfort Internal` contient actuellement **8 utilisateu
 - paramètres, aide, état du système, confidentialité et informations de publication ;
 - fonctionnement local privilégié et absence de compte utilisateur.
 
-## Loupe personnalisée expérimentale
+## Loupe officielle et prototype expérimental
 
-Le prototype de loupe demi-écran utilisant `AccessibilityService.takeScreenshot()` reste expérimental/debug et ne doit pas être considéré comme une fonctionnalité Release 1.0.1 tant que ses performances, sa mémoire et sa compatibilité n'ont pas été suffisamment validées.
+La Loupe VueConfort officielle de la Release utilise le grossissement natif Android en mode fenêtre via `MagnificationController` et `MagnificationConfig`. Le prototype de loupe par capture utilisant `AccessibilityService.takeScreenshot()` est physiquement isolé dans le source set Debug et ne fait pas partie du binaire Release 1.0.1.
 
 ## Priorité projet
 
