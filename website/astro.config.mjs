@@ -6,10 +6,10 @@ export default defineConfig({
   output: 'static',
   trailingSlash: 'always',
   integrations: [sitemap({
-    i18n: {
-      defaultLocale: 'fr',
-      locales: { fr: 'fr-FR', en: 'en-US' }
-    }
+    filter: (page) => ![
+      'https://vueconfort.fr/',
+      'https://vueconfort.fr/confidentialite/'
+    ].includes(page)
   })],
   build: { format: 'directory', inlineStylesheets: 'auto' },
   compressHTML: true

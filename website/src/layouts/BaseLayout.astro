@@ -2,8 +2,8 @@
 import '../styles.css';
 import { languages, navItems, routes, ui, type Lang, type Slug } from '../content/site';
 
-interface Props { lang: Lang; title: string; description: string; slug?: Slug; image?: string; }
-const { lang, title, description, slug, image = '/og.png' } = Astro.props;
+interface Props { lang: Lang; title: string; description: string; slug?: Slug; image?: string; noindex?: boolean; }
+const { lang, title, description, slug, image = '/og.png', noindex = false } = Astro.props;
 const t = ui[lang];
 const path = slug ? routes[lang][slug] : '';
 const canonical = new URL(`/${lang}/${path ? `${path}/` : ''}`, Astro.site);
@@ -27,16 +27,17 @@ const schema = [{
     <meta name="description" content={description} />
     <meta name="theme-color" content="#075985" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
-    <link rel="canonical" href={canonical} />
-    {languages.map((code) => <link rel="alternate" hreflang={code} href={new URL(`/${code}/${slug ? `${routes[code][slug]}/` : ''}`, Astro.site)} />)}
-    <link rel="alternate" hreflang="x-default" href={new URL('/fr/', Astro.site)} />
+    <meta name="robots" content={noindex ? 'noindex,follow' : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'} />
+    {!noindex && <link rel="canonical" href={canonical} />}
+    {!noindex && languages.map((code) => <link rel="alternate" hreflang={code} href={new URL(`/${code}/${slug ? `${routes[code][slug]}/` : ''}`, Astro.site)} />)}
+    {!noindex && <link rel="alternate" hreflang="x-default" href={new URL('/fr/', Astro.site)} />}
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="VueConfort" />
     <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
+    <meta property="og:locale:alternate" content={lang === 'fr' ? 'en_US' : 'fr_FR'} />
     <meta property="og:title" content={documentTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
