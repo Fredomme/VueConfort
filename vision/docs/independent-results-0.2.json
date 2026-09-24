@@ -1,0 +1,506 @@
+{
+  "meaning": "Numerical model validation only; no diagnosis or established human benefit",
+  "directPupilPointChecks": [
+    {
+      "profile": "s150-d300",
+      "maxErrorVsDirect2DPupil": 1.0908823622202135e-08,
+      "converged": true,
+      "maxIntegralError": 1.6211007918416324e-07,
+      "maxPanels": 64,
+      "radialSamples": 775623,
+      "buildMs": 324.389125,
+      "negativeTransferSamples": 0,
+      "dc": 1.0
+    },
+    {
+      "profile": "s250-d300",
+      "maxErrorVsDirect2DPupil": 1.0879690037768341e-08,
+      "converged": true,
+      "maxIntegralError": 1.6211388796197043e-07,
+      "maxPanels": 128,
+      "radialSamples": 775623,
+      "buildMs": 451.221792,
+      "negativeTransferSamples": 0,
+      "dc": 1.0
+    },
+    {
+      "profile": "s400-d300",
+      "maxErrorVsDirect2DPupil": 1.0807398753698294e-08,
+      "converged": true,
+      "maxIntegralError": 1.621127800701918e-07,
+      "maxPanels": 128,
+      "radialSamples": 775623,
+      "buildMs": 560.989792,
+      "negativeTransferSamples": 1550923,
+      "dc": 1.0
+    },
+    {
+      "profile": "s150-d400",
+      "maxErrorVsDirect2DPupil": 1.0856330834307926e-08,
+      "converged": true,
+      "maxIntegralError": 1.6211378582485737e-07,
+      "maxPanels": 64,
+      "radialSamples": 445742,
+      "buildMs": 223.995,
+      "negativeTransferSamples": 0,
+      "dc": 1.0
+    },
+    {
+      "profile": "s250-d400",
+      "maxErrorVsDirect2DPupil": 1.0806103234450859e-08,
+      "converged": true,
+      "maxIntegralError": 1.6211276403076787e-07,
+      "maxPanels": 128,
+      "radialSamples": 445742,
+      "buildMs": 291.480042,
+      "negativeTransferSamples": 0,
+      "dc": 1.0
+    },
+    {
+      "profile": "s400-d400",
+      "maxErrorVsDirect2DPupil": 1.0683974371872296e-08,
+      "converged": true,
+      "maxIntegralError": 1.6211253457566683e-07,
+      "maxPanels": 128,
+      "radialSamples": 445742,
+      "buildMs": 327.484,
+      "negativeTransferSamples": 1528650,
+      "dc": 1.0
+    },
+    {
+      "profile": "s150-d600",
+      "maxErrorVsDirect2DPupil": 1.0742523759432743e-08,
+      "converged": true,
+      "maxIntegralError": 1.273168508637903e-07,
+      "maxPanels": 64,
+      "radialSamples": 204459,
+      "buildMs": 128.948541,
+      "negativeTransferSamples": 0,
+      "dc": 1.0
+    },
+    {
+      "profile": "s250-d600",
+      "maxErrorVsDirect2DPupil": 1.06316264680828e-08,
+      "converged": true,
+      "maxIntegralError": 1.273239505933669e-07,
+      "maxPanels": 128,
+      "radialSamples": 204459,
+      "buildMs": 162.622791,
+      "negativeTransferSamples": 0,
+      "dc": 1.0
+    },
+    {
+      "profile": "s400-d600",
+      "maxErrorVsDirect2DPupil": 1.0362792401963361e-08,
+      "converged": true,
+      "maxIntegralError": 1.273219704239573e-07,
+      "maxPanels": 128,
+      "radialSamples": 204459,
+      "buildMs": 187.873917,
+      "negativeTransferSamples": 897292,
+      "dc": 1.0
+    }
+  ],
+  "fullGrids": {
+    "s150-d400": {
+      "maximumDifference": 8.735610412813344e-08,
+      "maximumAtYX": [
+        0,
+        1
+      ],
+      "dc": 1.0,
+      "negativeSamples": 0,
+      "minimum": 0.0934581058424261,
+      "hermitianMaximumError": 0.0,
+      "preparation": {
+        "seconds": 0.4078015420018346,
+        "quadratureOrder": 128,
+        "radialSamples": 445742,
+        "distanceMm": 400.0,
+        "sphereD": 0.15,
+        "pupilMm": 3.0,
+        "width": 2048,
+        "height": 1024
+      }
+    },
+    "s250-d400": {
+      "maximumDifference": 8.735451739738664e-08,
+      "maximumAtYX": [
+        0,
+        1
+      ],
+      "dc": 1.0,
+      "negativeSamples": 0,
+      "minimum": 0.07000138315316962,
+      "hermitianMaximumError": 0.0,
+      "preparation": {
+        "seconds": 0.4169866250013001,
+        "quadratureOrder": 128,
+        "radialSamples": 445742,
+        "distanceMm": 400.0,
+        "sphereD": 0.25,
+        "pupilMm": 3.0,
+        "width": 2048,
+        "height": 1024
+      }
+    },
+    "s400-d400": {
+      "maximumDifference": 8.735064982445806e-08,
+      "maximumAtYX": [
+        0,
+        1
+      ],
+      "dc": 1.0,
+      "negativeSamples": 1528650,
+      "minimum": -0.04278818213978166,
+      "hermitianMaximumError": 0.0,
+      "preparation": {
+        "seconds": 0.4302380829976755,
+        "quadratureOrder": 128,
+        "radialSamples": 445742,
+        "distanceMm": 400.0,
+        "sphereD": 0.4,
+        "pupilMm": 3.0,
+        "width": 2048,
+        "height": 1024
+      }
+    }
+  },
+  "cases": {
+    "moderate-s150-d400": {
+      "mseNormal": 8.237852993027504e-05,
+      "mseOutput": 3.916263608109468e-05,
+      "boundaryMaxDifference": 4.5803705495117697e-07,
+      "mseCandidate": 3.916263608109468e-05,
+      "clippingFraction": 0.0,
+      "relativeImprovement": 0.524601420852717,
+      "outputRelativeImprovement": 0.524601420852717,
+      "outputBoundaryMaxDifference": 4.5803705495117697e-07,
+      "forwardCheckSeconds": 0.17655891699541826,
+      "preparation": {
+        "seconds": 0.4078015420018346,
+        "quadratureOrder": 128,
+        "radialSamples": 445742,
+        "distanceMm": 400.0,
+        "sphereD": 0.15,
+        "pupilMm": 3.0,
+        "width": 2048,
+        "height": 1024
+      },
+      "exteriorCode": 188,
+      "exteriorLinear": 0.5028864580325687,
+      "candidateIsIdentity": false,
+      "interpretation": "Independent model checks only; no human benefit or physical photometry established",
+      "metricDifferences": {
+        "mseNormal": 1.3201012102838274e-10,
+        "mseOutput": 6.97604398428248e-11,
+        "mseCandidate": 6.97604398428248e-11,
+        "clippingFraction": 0.0,
+        "boundaryMaxDifference": 4.7383208467977056e-11,
+        "relativeImprovement": 8.501007064953825e-08
+      },
+      "displayCodeMaximumDifference": 0,
+      "displayCodesDiffering": 0,
+      "flags": []
+    },
+    "bars-s250-d400": {
+      "mseNormal": 0.002168218262712829,
+      "mseOutput": 0.0017578241751036153,
+      "boundaryMaxDifference": 2.4549919587335545e-05,
+      "mseCandidate": 0.0017578271901986416,
+      "clippingFraction": 0.0,
+      "relativeImprovement": 0.18927571987181524,
+      "outputRelativeImprovement": 0.18927711045830653,
+      "outputBoundaryMaxDifference": 2.4549919587335545e-05,
+      "forwardCheckSeconds": 0.1844337500006077,
+      "preparation": {
+        "seconds": 0.4169866250013001,
+        "quadratureOrder": 128,
+        "radialSamples": 445742,
+        "distanceMm": 400.0,
+        "sphereD": 0.25,
+        "pupilMm": 3.0,
+        "width": 2048,
+        "height": 1024
+      },
+      "exteriorCode": 188,
+      "exteriorLinear": 0.5028864580325687,
+      "candidateIsIdentity": false,
+      "interpretation": "Independent model checks only; no human benefit or physical photometry established",
+      "metricDifferences": {
+        "mseNormal": 9.708202644564956e-11,
+        "mseOutput": 3.462598458826849e-11,
+        "mseCandidate": 2.9804690417079005e-09,
+        "clippingFraction": 0.0,
+        "boundaryMaxDifference": 2.544151667116523e-09,
+        "relativeImprovement": 1.4109168404996542e-06
+      },
+      "displayCodeMaximumDifference": 1,
+      "displayCodesDiffering": 4,
+      "flags": []
+    },
+    "black-white-s250-d400": {
+      "mseNormal": 0.026260202698875468,
+      "mseOutput": 0.026260202698875468,
+      "boundaryMaxDifference": 1.961961858221173e-05,
+      "mseCandidate": 0.026260202698875468,
+      "clippingFraction": 0.9488525390625,
+      "relativeImprovement": 0.0,
+      "outputRelativeImprovement": 0.0,
+      "outputBoundaryMaxDifference": 1.961961858221173e-05,
+      "forwardCheckSeconds": 0.17116804200486513,
+      "preparation": {
+        "seconds": 0.4169866250013001,
+        "quadratureOrder": 128,
+        "radialSamples": 445742,
+        "distanceMm": 400.0,
+        "sphereD": 0.25,
+        "pupilMm": 3.0,
+        "width": 2048,
+        "height": 1024
+      },
+      "exteriorCode": 188,
+      "exteriorLinear": 0.5028864580325687,
+      "candidateIsIdentity": true,
+      "interpretation": "Independent model checks only; no human benefit or physical photometry established",
+      "metricDifferences": {
+        "mseNormal": 1.4527026907795726e-09,
+        "mseOutput": 1.4527026907795726e-09,
+        "mseCandidate": 1.4527026907795726e-09,
+        "clippingFraction": 0.0,
+        "boundaryMaxDifference": 1.7669881113846486e-09,
+        "relativeImprovement": 0.0
+      },
+      "displayCodeMaximumDifference": 0,
+      "displayCodesDiffering": 0,
+      "flags": []
+    },
+    "border-stress-s250-d400": {
+      "mseNormal": 0.0008453382252036219,
+      "mseOutput": 0.0007178576336210841,
+      "boundaryMaxDifference": 4.921093409882005e-06,
+      "mseCandidate": 0.0007178576336210841,
+      "clippingFraction": 3.0517578125e-05,
+      "relativeImprovement": 0.15080424353439206,
+      "outputRelativeImprovement": 0.15080424353439206,
+      "outputBoundaryMaxDifference": 4.921093409882005e-06,
+      "forwardCheckSeconds": 0.17325054200045997,
+      "preparation": {
+        "seconds": 0.4169866250013001,
+        "quadratureOrder": 128,
+        "radialSamples": 445742,
+        "distanceMm": 400.0,
+        "sphereD": 0.25,
+        "pupilMm": 3.0,
+        "width": 2048,
+        "height": 1024
+      },
+      "exteriorCode": 188,
+      "exteriorLinear": 0.5028864580325687,
+      "candidateIsIdentity": false,
+      "interpretation": "Independent model checks only; no human benefit or physical photometry established",
+      "metricDifferences": {
+        "mseNormal": 2.0865851169289684e-10,
+        "mseOutput": 1.648170897721249e-10,
+        "mseCandidate": 1.648170897721249e-10,
+        "clippingFraction": 0.0,
+        "boundaryMaxDifference": 4.719680202214249e-11,
+        "relativeImprovement": 1.4638909584530069e-08
+      },
+      "displayCodeMaximumDifference": 0,
+      "displayCodesDiffering": 0,
+      "flags": []
+    },
+    "constant-s250-d400": {
+      "mseNormal": 0.0,
+      "mseOutput": 0.0,
+      "boundaryMaxDifference": 0.0,
+      "mseCandidate": 0.0,
+      "clippingFraction": 0.0,
+      "relativeImprovement": 0.0,
+      "outputRelativeImprovement": 0.0,
+      "outputBoundaryMaxDifference": 0.0,
+      "forwardCheckSeconds": 0.17086174999712966,
+      "preparation": {
+        "seconds": 0.4169866250013001,
+        "quadratureOrder": 128,
+        "radialSamples": 445742,
+        "distanceMm": 400.0,
+        "sphereD": 0.25,
+        "pupilMm": 3.0,
+        "width": 2048,
+        "height": 1024
+      },
+      "exteriorCode": 188,
+      "exteriorLinear": 0.5028864580325687,
+      "candidateIsIdentity": true,
+      "interpretation": "Independent model checks only; no human benefit or physical photometry established",
+      "metricDifferences": {
+        "mseNormal": 0.0,
+        "mseOutput": 0.0,
+        "mseCandidate": 0.0,
+        "clippingFraction": 0.0,
+        "boundaryMaxDifference": 0.0,
+        "relativeImprovement": 0.0
+      },
+      "displayCodeMaximumDifference": 0,
+      "displayCodesDiffering": 0,
+      "flags": []
+    },
+    "moderate-s250-d400": {
+      "mseNormal": 0.0001392395473885603,
+      "mseOutput": 6.63635048214715e-05,
+      "boundaryMaxDifference": 4.7008214276722526e-07,
+      "mseCandidate": 6.63635048214715e-05,
+      "clippingFraction": 0.0,
+      "relativeImprovement": 0.5233860920541614,
+      "outputRelativeImprovement": 0.5233860920541614,
+      "outputBoundaryMaxDifference": 4.7008214276722526e-07,
+      "forwardCheckSeconds": 0.17288558300060686,
+      "preparation": {
+        "seconds": 0.4169866250013001,
+        "quadratureOrder": 128,
+        "radialSamples": 445742,
+        "distanceMm": 400.0,
+        "sphereD": 0.25,
+        "pupilMm": 3.0,
+        "width": 2048,
+        "height": 1024
+      },
+      "exteriorCode": 188,
+      "exteriorLinear": 0.5028864580325687,
+      "candidateIsIdentity": false,
+      "interpretation": "Independent model checks only; no human benefit or physical photometry established",
+      "metricDifferences": {
+        "mseNormal": 1.503796266655831e-10,
+        "mseOutput": 6.823686312718881e-11,
+        "mseCandidate": 6.823686312718881e-11,
+        "clippingFraction": 0.0,
+        "boundaryMaxDifference": 4.86569673441295e-11,
+        "relativeImprovement": 2.4678008303524734e-08
+      },
+      "displayCodeMaximumDifference": 0,
+      "displayCodesDiffering": 0,
+      "flags": []
+    },
+    "text-like-s250-d400": {
+      "mseNormal": 0.00820392181572066,
+      "mseOutput": 0.007113691018223724,
+      "boundaryMaxDifference": 4.586021444197286e-05,
+      "mseCandidate": 0.007113691018223724,
+      "clippingFraction": 0.0,
+      "relativeImprovement": 0.13289141729846765,
+      "outputRelativeImprovement": 0.13289141729846765,
+      "outputBoundaryMaxDifference": 4.586021444197286e-05,
+      "forwardCheckSeconds": 0.17326929199771257,
+      "preparation": {
+        "seconds": 0.4169866250013001,
+        "quadratureOrder": 128,
+        "radialSamples": 445742,
+        "distanceMm": 400.0,
+        "sphereD": 0.25,
+        "pupilMm": 3.0,
+        "width": 2048,
+        "height": 1024
+      },
+      "exteriorCode": 188,
+      "exteriorLinear": 0.5028864580325687,
+      "candidateIsIdentity": false,
+      "interpretation": "Independent model checks only; no human benefit or physical photometry established",
+      "metricDifferences": {
+        "mseNormal": 2.192997016620124e-10,
+        "mseOutput": 2.9867896003676897e-10,
+        "mseCandidate": 2.9867896003676897e-10,
+        "clippingFraction": 0.0,
+        "boundaryMaxDifference": 4.386393692712431e-09,
+        "relativeImprovement": 1.3228101364282097e-08
+      },
+      "displayCodeMaximumDifference": 0,
+      "displayCodesDiffering": 0,
+      "flags": []
+    },
+    "moderate-s400-d400": {
+      "mseNormal": 0.0002959912940762139,
+      "mseOutput": 0.00011953973722481218,
+      "boundaryMaxDifference": 4.580951268318145e-07,
+      "mseCandidate": 0.00011954109677577844,
+      "clippingFraction": 0.0,
+      "relativeImprovement": 0.5961330648292711,
+      "outputRelativeImprovement": 0.596137658041955,
+      "outputBoundaryMaxDifference": 4.580951268318145e-07,
+      "forwardCheckSeconds": 0.17136779199790908,
+      "preparation": {
+        "seconds": 0.4302380829976755,
+        "quadratureOrder": 128,
+        "radialSamples": 445742,
+        "distanceMm": 400.0,
+        "sphereD": 0.4,
+        "pupilMm": 3.0,
+        "width": 2048,
+        "height": 1024
+      },
+      "exteriorCode": 188,
+      "exteriorLinear": 0.5028864580325687,
+      "candidateIsIdentity": false,
+      "interpretation": "Independent model checks only; no human benefit or physical photometry established",
+      "metricDifferences": {
+        "mseNormal": 1.8067729961896567e-10,
+        "mseOutput": 5.810729843255466e-11,
+        "mseCandidate": 1.3014436678267542e-09,
+        "clippingFraction": 0.0,
+        "boundaryMaxDifference": 4.747868764809482e-11,
+        "relativeImprovement": 4.643421761540978e-06
+      },
+      "displayCodeMaximumDifference": 1,
+      "displayCodesDiffering": 2,
+      "flags": []
+    }
+  },
+  "rectangularFft": {
+    "maximumComplexErrorVsNumpy": 1.9860273225978185e-15,
+    "maximumRoundtripError": 2.7755575615628914e-16,
+    "width": 8,
+    "height": 4
+  },
+  "phoneFirstSyntheticCapture": {
+    "mseNormal": 0.0003852968012959073,
+    "mseOutput": 0.00029072590610679634,
+    "boundaryMaxDifference": 3.407697902479967e-05,
+    "mseCandidate": 0.00029072590610679634,
+    "clippingFraction": 0.0,
+    "relativeImprovement": 0.24544946874988635,
+    "outputRelativeImprovement": 0.24544946874988635,
+    "outputBoundaryMaxDifference": 3.407697902479967e-05,
+    "forwardCheckSeconds": 0.17094633399392478,
+    "preparation": {
+      "seconds": 0.4078015420018346,
+      "quadratureOrder": 128,
+      "radialSamples": 445742,
+      "distanceMm": 400.0,
+      "sphereD": 0.15,
+      "pupilMm": 3.0,
+      "width": 2048,
+      "height": 1024
+    },
+    "exteriorCode": 188,
+    "exteriorLinear": 0.5028864580325687,
+    "candidateIsIdentity": false,
+    "interpretation": "Independent model checks only; no human benefit or physical photometry established",
+    "metricDifferences": {
+      "mseNormal": 6.729399296915434e-11,
+      "mseOutput": 5.7556056383585574e-11,
+      "mseCandidate": 5.7556056383585574e-11,
+      "clippingFraction": 0.0,
+      "boundaryMaxDifference": 3.265615888814466e-09,
+      "relativeImprovement": 1.7595103402046064e-08
+    },
+    "displayCodeMaximumDifference": 0,
+    "displayCodesDiffering": 0,
+    "flags": []
+  },
+  "engineSourceSha256": {
+    "OpticalExperiment.kt": "f47a990258d978c19c8467b8a116fea5db7f78d18ea11f839f43e787662b87e5",
+    "RectangularFft.kt": "5e8b7aaa8c160b5a5f608c5d70830c1376b3605b587cdfccc87e96ac6338663a"
+  },
+  "directPupilReferenceConvergence": 7.54628515231559e-08
+}

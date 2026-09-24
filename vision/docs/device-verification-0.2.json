@@ -1,0 +1,53 @@
+{
+  "version": "0.2.0",
+  "package": "fr.vueconfort.vision",
+  "installedMatchesDeliverable": true,
+  "apkSha256": "aceae74bbe520277f0d45484bc41a662001166736a1cd5aef601acd115ca7875",
+  "preservation-result": {
+    "oldPackagesUnchanged": true,
+    "oldLoupeDataUnchanged": true
+  },
+  "old-source-preservation": {
+    "oldSourceFilesCompared": 438,
+    "oldSourcesUnchanged": true,
+    "changedFiles": []
+  },
+  "pixel-verification": {
+    "candidateMismatchingPixels": 0,
+    "candidateGrayGuardMismatches": 0,
+    "originalMismatchingPixels": 0,
+    "originalGrayGuardMismatches": 0,
+    "changedPixelsByOptics": 33248,
+    "nativeRectangle": [
+      156,
+      350,
+      768,
+      256
+    ]
+  },
+  "capture-verification": {
+    "capturedNeutralCropMatchesOpticalBaseline": true,
+    "mismatchingPixels": 0,
+    "captureServiceStopped": true,
+    "sourceRaster": [
+      1008,
+      432
+    ],
+    "opticalRaster": [
+      768,
+      256
+    ],
+    "cropOnlyNoResizing": true
+  },
+  "normal-and-tests": {
+    "normalModeNoImageWrites": true,
+    "normalModePrivateFilesChanged": [
+      "shared_prefs/android.app.ActivityThread.IDS.xml"
+    ],
+    "onlyAndroidFrameworkIdentifierChanged": true,
+    "visionControlsUnchanged": true,
+    "noSubjectiveRatingInvented": true,
+    "unitTests": 34,
+    "failures": 0
+  }
+}

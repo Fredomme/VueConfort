@@ -1,5 +1,13 @@
 # Changelog
 
+## VueConfort Vision 0.2.0 — 2026-09-24
+
+- ajout du projet Android autonome `vision/`, identifiant `fr.vueconfort.vision`;
+- loupe par capture avec molettes de zoom, lumière, contraste et contours;
+- précompensation optique expérimentale sur image fixe de 768 × 256 pixels, trois hypothèses sphériques, distance déclarée, comparaison original/traité et retour à l’original si le résultat numérique est insuffisant;
+- 34 tests unitaires, audit numérique indépendant et vérification physique sur Galaxy S25;
+- aucune modification du code de l’application historique ni de sa version Google Play.
+
 ## Non publié
 
 - distinction explicite entre la Loupe VueConfort Production, fondée sur le grossissement natif Android, et le prototype R&D par capture;

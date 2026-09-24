@@ -1,0 +1,57 @@
+name: Validate VueConfort Vision
+
+on:
+  pull_request:
+    paths:
+      - "vision/**"
+      - ".github/workflows/vision-android.yml"
+  push:
+    branches: [main]
+    paths:
+      - "vision/**"
+      - ".github/workflows/vision-android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vision-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: vision
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - name: Install Android 36 platform and build tools
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Test, assemble and lint Vision
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
+      - name: Upload validation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vision-validation-reports
+          path: |
+            vision/app/build/reports/tests/testDebugUnitTest/
+            vision/app/build/reports/lint-results-debug.*
+            vision/app/build/test-results/testDebugUnitTest/
+          if-no-files-found: warn
