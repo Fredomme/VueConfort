@@ -1,0 +1,26 @@
+{
+  "s150-d400": {
+    "psfMin": 1.480943984728142e-10,
+    "psfSum": 1.0000000000000002,
+    "grayGuardHorizontalPx": 156,
+    "grayGuardVerticalPx": 128,
+    "highGridMaxErrorFromUnknownExterior": 0.0005012626174113298,
+    "qualification": "Conservative absolute-kernel bound on the finite high-grid model, for any outside-field luminance in [0,1]; not a proof about OLED or infinite-support tails."
+  },
+  "s250-d400": {
+    "psfMin": 1.4809536200473332e-10,
+    "psfSum": 1.0000000000000002,
+    "grayGuardHorizontalPx": 156,
+    "grayGuardVerticalPx": 128,
+    "highGridMaxErrorFromUnknownExterior": 0.0005013335905601444,
+    "qualification": "Conservative absolute-kernel bound on the finite high-grid model, for any outside-field luminance in [0,1]; not a proof about OLED or infinite-support tails."
+  },
+  "s400-d400": {
+    "psfMin": 1.4809770776866408e-10,
+    "psfSum": 1.0000000000000004,
+    "grayGuardHorizontalPx": 156,
+    "grayGuardVerticalPx": 128,
+    "highGridMaxErrorFromUnknownExterior": 0.0005015066880943261,
+    "qualification": "Conservative absolute-kernel bound on the finite high-grid model, for any outside-field luminance in [0,1]; not a proof about OLED or infinite-support tails."
+  }
+}

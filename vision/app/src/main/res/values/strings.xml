@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VueConfort Vision</string>
+    <string name="vision_intro">Une loupe indépendante pour régler l’image. Votre loupe habituelle reste intacte.</string>
+    <string name="vision_controls">Réglez le zoom, la lumière, le contraste et les contours en direct. Le nouvel essai optique compare une image fixe en noir et blanc.</string>
+    <string name="vision_one_loupe">Fermez temporairement les autres loupes pour comparer un rendu à la fois.</string>
+    <string name="vision_permission">Autoriser la fenêtre flottante</string>
+    <string name="vision_permission_ready">Fenêtre flottante autorisée</string>
+    <string name="vision_permission_needed">Autorisez d’abord la fenêtre flottante, puis démarrez la loupe.</string>
+    <string name="vision_start">Démarrer Vision</string>
+    <string name="vision_stop">Arrêter Vision</string>
+    <string name="vision_stopped">VueConfort Vision est arrêtée.</string>
+    <string name="vision_cancelled">Le partage d’écran a été annulé. Vous pouvez réessayer.</string>
+    <string name="vision_start_failed">Le démarrage a échoué. Réessayez depuis cet écran.</string>
+    <string name="vision_experimental">Réglages visuels expérimentaux · correction personnelle non calibrée</string>
+</resources>

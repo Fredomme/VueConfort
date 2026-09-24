@@ -2,6 +2,13 @@
 
 Application Android personnelle destinée aux personnes qui ont du mal à lire sur écran mais n’ont pas — ou pas encore — de lunettes.
 
+## Projets du dépôt
+
+- **VueConfort 1.0.1**, à la racine : application historique d’assistance visuelle décrite ci-dessous.
+- **[VueConfort Vision 0.2](vision/README.md)**, dans `vision/` : application Android indépendante (`fr.vueconfort.vision`) avec loupe par capture, quatre molettes simultanées et essai de précompensation optique sur image fixe. Elle possède son propre projet Gradle et ne remplace pas la loupe historique.
+
+Vision 0.2 reste expérimentale : ses calculs et ses pixels affichés ont été vérifiés, sans démonstration d’un bénéfice visuel humain ni d’un remplacement de lunettes. Voir son [bilan de validation](vision/docs/VALIDATION-0.2.md).
+
 ## Positionnement
 
 VueConfort ne corrige pas la vue et ne remplace pas des lunettes. L’application recherche des réglages d’affichage plus confortables : taille, graisse, interlignage, fond et contraste.
