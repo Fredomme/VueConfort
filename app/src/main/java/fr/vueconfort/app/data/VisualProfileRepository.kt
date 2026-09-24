@@ -3,6 +3,7 @@ package fr.vueconfort.app.data
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.MutablePreferences
@@ -13,6 +14,9 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import fr.vueconfort.app.equalizer.ConfirmedBilanReference
+import fr.vueconfort.app.equalizer.EqualizerProfile
+import fr.vueconfort.app.equalizer.EqualizerProfileCodec
 import fr.vueconfort.app.model.AgeRange
 import fr.vueconfort.app.model.AssistProfile
 import fr.vueconfort.app.model.AmbientLightLevel
@@ -66,9 +70,10 @@ private val Context.vueConfortDataStore by preferencesDataStore(
 )
 
 class VisualProfileRepository(
-    private val context: Context
+    private val context: Context,
+    private val dataStore: DataStore<Preferences> = context.vueConfortDataStore
 ) {
-    private val safePreferences = context.vueConfortDataStore.data.catch { throwable ->
+    private val safePreferences = dataStore.data.catch { throwable ->
         if (throwable is IOException) {
             ErrorReporter.from(ErrorCategory.STORAGE_INACCESSIBLE, "datastore_read", throwable)
             emit(emptyPreferences())
@@ -81,6 +86,13 @@ class VisualProfileRepository(
         safePreferences.map { it[Keys.ONBOARDING_COMPLETED] ?: false }
     val opticalPrescription: Flow<OpticalPrescription?> =
         safePreferences.map { OpticalPrescriptionCodec.decode(it[Keys.OPTICAL_PRESCRIPTION]) }
+    // Equalizer read failures must be visible: emitting a neutral profile here could hide saved data.
+    val equalizerProfile: Flow<EqualizerProfile?> = dataStore.data.map { preferences ->
+        val raw = preferences[Keys.EQUALIZER_PROFILE]
+        if (raw == null) null else requireNotNull(EqualizerProfileCodec.decode(raw)) {
+            "Le profil enregistré ne peut pas être lu avec cette version."
+        }
+    }
     val opticalPrescriptionHistory: Flow<List<OpticalPrescription>> =
         safePreferences.map { preferences ->
             preferences[Keys.OPTICAL_PRESCRIPTION_HISTORY].orEmpty().lineSequence()
@@ -233,7 +245,7 @@ class VisualProfileRepository(
         }
 
     suspend fun saveProfile(profile: VisualProfile) {
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             preferences[Keys.PROFILE_ID] = profile.id
             preferences[Keys.PROFILE_NAME] = profile.name
             preferences[Keys.FONT_SIZE] = profile.fontSizeSp
@@ -259,7 +271,7 @@ class VisualProfileRepository(
     }
 
     suspend fun saveUserContext(userContext: UserVisualContext) {
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             preferences[Keys.AGE_RANGE] = userContext.ageRange.name
             preferences[Keys.SCREEN_TIME] =
                 userContext.dailyScreenTimeHours
@@ -296,15 +308,51 @@ class VisualProfileRepository(
 
     suspend fun saveOpticalPrescription(value: OpticalPrescription) {
         require(value.isValid) { value.validationErrors().joinToString(" ") }
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             writePrescription(preferences, value)
+        }
+    }
+
+    /** A single DataStore transaction owns all equalizer fields, with the current confirmed bilan reference. */
+    suspend fun saveEqualizerProfile(value: EqualizerProfile): EqualizerProfile {
+        val clean = value.validated()
+        var persisted: EqualizerProfile? = null
+        dataStore.edit { preferences ->
+            // Check inside the transaction as well as in the UI, including a change after the last read.
+            preferences[Keys.EQUALIZER_PROFILE]?.let { existing ->
+                require(EqualizerProfileCodec.decode(existing) != null) {
+                    "Le profil existant n’est pas compatible. Il n’a pas été remplacé."
+                }
+            }
+            val bilan = OpticalPrescriptionCodec.decode(preferences[Keys.OPTICAL_PRESCRIPTION])
+            val reference = ConfirmedBilanReference.from(bilan)
+            val referenceChanged = clean.confirmedBilan != reference
+            val saved = clean.copy(
+                confirmedBilan = reference,
+                calculated = if (referenceChanged) null else clean.calculated,
+                applied = if (referenceChanged) null else clean.applied,
+                provenance = clean.provenance.copy(updatedAtMillis = System.currentTimeMillis())
+            )
+            preferences[Keys.EQUALIZER_PROFILE] = EqualizerProfileCodec.encode(saved)
+            // Unreleased refinement used a global sidecar. An explicit new save supersedes it.
+            // Historical reader typography and loupe settings belong to other features and remain intact.
+            preferences.remove(Keys.LEGACY_VISION_REFINEMENT)
+            persisted = saved
+        }
+        return checkNotNull(persisted)
+    }
+
+    suspend fun deleteEqualizerProfile() {
+        dataStore.edit { preferences ->
+            preferences.remove(Keys.EQUALIZER_PROFILE)
+            preferences.remove(Keys.LEGACY_VISION_REFINEMENT)
         }
     }
 
     /** Commit the confirmed document and selected comfort profile together. */
     suspend fun savePrescriptionAndAssistProfile(value: OpticalPrescription, profile: AssistProfile) {
         require(value.isValid) { value.validationErrors().joinToString(" ") }
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             val profiles = decodeProfiles(preferences[Keys.ASSIST_PROFILES])
                 .ifEmpty { AssistProfile.defaults() }.toMutableList()
             val clean = uniqueName(profile.sanitized(), profiles)
@@ -336,14 +384,25 @@ class VisualProfileRepository(
         preferences[Keys.OPTICAL_PRESCRIPTION_HISTORY] = history
             .sortedByDescending { it.updatedAtMillis }.take(20)
             .joinToString("\n", transform = OpticalPrescriptionCodec::encode)
+        updateEqualizerBilanReference(preferences, ConfirmedBilanReference.from(stamped), invalidateComputed = true)
+    }
+
+    private fun updateEqualizerBilanReference(preferences: MutablePreferences, reference: ConfirmedBilanReference?, invalidateComputed: Boolean = false) {
+        val profile = EqualizerProfileCodec.decode(preferences[Keys.EQUALIZER_PROFILE]) ?: return
+        if (invalidateComputed || profile.confirmedBilan != reference) {
+            preferences[Keys.EQUALIZER_PROFILE] = EqualizerProfileCodec.encode(
+                profile.copy(confirmedBilan = reference, calculated = null, applied = null)
+            )
+        }
     }
 
     suspend fun deleteOpticalPrescription() {
         LocalDocumentReader.clearAbandonedTemporaryCopies(context)
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             releasePrescriptionDocumentGrants(preferences)
             preferences.remove(Keys.OPTICAL_PRESCRIPTION)
             preferences.remove(Keys.OPTICAL_PRESCRIPTION_HISTORY)
+            updateEqualizerBilanReference(preferences, null)
         }
     }
 
@@ -364,7 +423,7 @@ class VisualProfileRepository(
     }
 
     suspend fun saveOverlayPreferences(value: OverlayPreferences) {
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             preferences[Keys.OVERLAY_BUTTON_X] = value.buttonX
             preferences[Keys.OVERLAY_BUTTON_Y] = value.buttonY
             preferences[Keys.OVERLAY_PANEL_X] = value.panelX
@@ -379,7 +438,7 @@ class VisualProfileRepository(
     }
 
     suspend fun ensureAssistProfilesMigrated() {
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             if (decodeProfiles(preferences[Keys.ASSIST_PROFILES]).isEmpty()) {
                 val profiles = migratedDefaults(
                     preferences[Keys.OVERLAY_SCALE] ?: 2f,
@@ -397,7 +456,7 @@ class VisualProfileRepository(
     }
 
     suspend fun activateAssistProfile(id: String) {
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             val profiles = decodeProfiles(preferences[Keys.ASSIST_PROFILES])
                 .ifEmpty { AssistProfile.defaults() }
             val selected = profiles.firstOrNull { it.id == id } ?: profiles.first()
@@ -421,7 +480,7 @@ class VisualProfileRepository(
         reason: String,
         ruleId: String
     ) {
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             val profiles = decodeProfiles(preferences[Keys.ASSIST_PROFILES])
                 .ifEmpty { AssistProfile.defaults() }
             val selected = profiles.firstOrNull { it.id == profileId } ?: return@edit
@@ -444,7 +503,7 @@ class VisualProfileRepository(
     }
 
     suspend fun setManualPause(durationMillis: Long?) {
-        context.vueConfortDataStore.edit {
+        dataStore.edit {
             it[Keys.MANUAL_UNTIL] = when (durationMillis) {
                 null -> Long.MAX_VALUE
                 0L -> 0L
@@ -462,7 +521,7 @@ class VisualProfileRepository(
     }
 
     suspend fun upsertAutomationRule(rule: AutomationRule) {
-        context.vueConfortDataStore.edit {
+        dataStore.edit {
             val rules = decodeRules(it[Keys.AUTOMATION_RULES]).toMutableList()
             val clean = rule.sanitized()
             val index = rules.indexOfFirst { existing -> existing.id == clean.id }
@@ -472,7 +531,7 @@ class VisualProfileRepository(
     }
 
     suspend fun deleteAutomationRule(id: String) {
-        context.vueConfortDataStore.edit {
+        dataStore.edit {
             val rules = decodeRules(it[Keys.AUTOMATION_RULES]).filterNot { rule -> rule.id == id }
             it[Keys.AUTOMATION_RULES] = encodeRules(rules)
             if (it[Keys.ACTIVE_RULE_ID] == id) it[Keys.ACTIVE_RULE_ID] = ""
@@ -480,7 +539,7 @@ class VisualProfileRepository(
     }
 
     suspend fun saveVisualAssessment(value: VisualComfortAssessment) {
-        context.vueConfortDataStore.edit {
+        dataStore.edit {
             val values = decodeAssessments(it[Keys.VISUAL_ASSESSMENTS])
                 .filterNot { old -> old.id == value.id } + value
             it[Keys.VISUAL_ASSESSMENTS] = encodeAssessments(values)
@@ -488,7 +547,7 @@ class VisualProfileRepository(
     }
 
     suspend fun deleteVisualAssessment(id: String) {
-        context.vueConfortDataStore.edit {
+        dataStore.edit {
             it[Keys.VISUAL_ASSESSMENTS] = encodeAssessments(
                 decodeAssessments(it[Keys.VISUAL_ASSESSMENTS]).filterNot { value -> value.id == id }
             )
@@ -496,7 +555,7 @@ class VisualProfileRepository(
     }
 
     suspend fun saveStandardizedAssessment(value: StandardizedAssessmentReport) {
-        context.vueConfortDataStore.edit {
+        dataStore.edit {
             val values = decodeStandardReports(it[Keys.STANDARDIZED_ASSESSMENTS])
                 .filterNot { old -> old.id == value.id } + value
             it[Keys.STANDARDIZED_ASSESSMENTS] = encodeStandardReports(values)
@@ -504,7 +563,7 @@ class VisualProfileRepository(
     }
 
     suspend fun deleteStandardizedAssessment(id: String) {
-        context.vueConfortDataStore.edit {
+        dataStore.edit {
             it[Keys.STANDARDIZED_ASSESSMENTS] = encodeStandardReports(
                 decodeStandardReports(it[Keys.STANDARDIZED_ASSESSMENTS])
                     .filterNot { value -> value.id == id }
@@ -513,7 +572,7 @@ class VisualProfileRepository(
     }
 
     suspend fun upsertAssistProfile(profile: AssistProfile) {
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             val profiles = decodeProfiles(preferences[Keys.ASSIST_PROFILES])
                 .ifEmpty { AssistProfile.defaults() }
                 .toMutableList()
@@ -525,7 +584,7 @@ class VisualProfileRepository(
     }
 
     suspend fun deleteAssistProfile(id: String) {
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             val profiles = decodeProfiles(preferences[Keys.ASSIST_PROFILES])
                 .ifEmpty { AssistProfile.defaults() }
             val target = profiles.firstOrNull { it.id == id }
@@ -545,11 +604,11 @@ class VisualProfileRepository(
     }
 
     suspend fun setOnboardingCompleted(completed: Boolean) {
-        context.vueConfortDataStore.edit { it[Keys.ONBOARDING_COMPLETED] = completed }
+        dataStore.edit { it[Keys.ONBOARDING_COMPLETED] = completed }
     }
 
     suspend fun resetAssistProfiles() {
-        context.vueConfortDataStore.edit {
+        dataStore.edit {
             it[Keys.ASSIST_PROFILES] = encodeProfiles(AssistProfile.defaults())
             it[Keys.ACTIVE_ASSIST_PROFILE_ID] = AssistProfile.STANDARD_ID
             it[Keys.OVERLAY_PROFILE_ID] = AssistProfile.STANDARD_ID
@@ -557,14 +616,14 @@ class VisualProfileRepository(
     }
 
     suspend fun clearAssessmentHistory() {
-        context.vueConfortDataStore.edit {
+        dataStore.edit {
             it[Keys.VISUAL_ASSESSMENTS] = ""
             it[Keys.STANDARDIZED_ASSESSMENTS] = ""
         }
     }
 
     suspend fun clearAutomationRules() {
-        context.vueConfortDataStore.edit {
+        dataStore.edit {
             it[Keys.AUTOMATION_RULES] = ""
             it[Keys.ACTIVE_RULE_ID] = ""
         }
@@ -572,7 +631,7 @@ class VisualProfileRepository(
 
     suspend fun reset() {
         LocalDocumentReader.clearAbandonedTemporaryCopies(context)
-        context.vueConfortDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             releasePrescriptionDocumentGrants(preferences)
             preferences.clear()
         }
@@ -851,6 +910,8 @@ class VisualProfileRepository(
     }
 
     private object Keys {
+        val EQUALIZER_PROFILE = stringPreferencesKey("equalizer_profile_v1")
+        val LEGACY_VISION_REFINEMENT = stringPreferencesKey("vision_refinement_v1")
         val OPTICAL_PRESCRIPTION = stringPreferencesKey("optical_prescription_v1")
         val OPTICAL_PRESCRIPTION_HISTORY = stringPreferencesKey("optical_prescription_history_v1")
         val PROFILE_ID = stringPreferencesKey("profile_id")
