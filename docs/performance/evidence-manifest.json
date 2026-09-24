@@ -1,0 +1,50 @@
+{
+  "scope": "VueConfort Aperçu only; no serial, personal application names, binary, trace, backup or document content included",
+  "trace": {
+    "file": "s25-equalizer-final.pftrace",
+    "bytes": 135499938,
+    "sha256": "bacec67b2ccdad910680483552ba06fd43fc7af0159e9aff2f3e0b9261bd3ff6"
+  },
+  "app_report": {
+    "file": "s25-equalizer-final-app.json",
+    "sha256": "ace06269caea00b86245315fed878931a3427a291216cdc337ab55a8344de51f"
+  },
+  "trace_processor": {
+    "version": "v58.2",
+    "platform": "macOS ARM64",
+    "sha256": "d29864d1ba3b36855527bb1b0ca3aa7f703cdce338b9680bb922c5c151b358fa"
+  },
+  "published_files": {
+    "README.md": {
+      "bytes": 9539,
+      "sha256": "59fc6a30624b703fb0e1fe959d30b399ebc469536ae2d548ca25f9a2aec019f0"
+    },
+    "RESULTATS-PERFORMANCE.md": {
+      "bytes": 7441,
+      "sha256": "18ac44c82f80c2c7d72445e6e7ec158b3fbec61fd8eaffcf8dae65ed1fafb3a4"
+    },
+    "analysis-final.json": {
+      "bytes": 24089,
+      "sha256": "1313edd14daa7904977641f252c211667f9480e0c9d1f8a15d926734bd3b705c"
+    },
+    "equalizer-perfetto-final.pbtxt": {
+      "bytes": 1069,
+      "sha256": "22ddf106c94cc2ea5d023a5020bc742299ca136f69dd7cd65604142ff7c0aae4"
+    },
+    "equalizer-presentation-recovered.sql": {
+      "bytes": 4881,
+      "sha256": "22f9d74a9002afc59e7f2e589f4dcdeb90ab4f2113e9d8fb133c6d973558c420"
+    },
+    "analyze_equalizer.py": {
+      "bytes": 15774,
+      "sha256": "aec073d0a4f07a0470bc77864157c9242104f182e25f3a321f07d7705e0d3d58"
+    }
+  },
+  "application": {
+    "source_commit": "ff307a489790cc6700b4a701f7aa28e5a0ea77f5",
+    "version": "1.0.2-preview",
+    "version_code": 3,
+    "apk_sha256": "c4a9b0c4c0a387359d0fa4cb436d1d2103e418913b15a25f6bfaec04b787cdbf",
+    "installed_apk_matches_delivered_apk": true
+  }
+}

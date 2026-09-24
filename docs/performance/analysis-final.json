@@ -1,0 +1,771 @@
+{
+  "method": "Command marker identifies callback; CLOCK_MONOTONIC snapshots anchor the actual callback nanoTime in trace time. Enclosing Choreographer#doFrame exact token -> app SurfaceFrame -> linked SurfaceFlinger DisplayFrame end. No nearest-time frame joins. Known metric-token disagreements excluded. FrameTimeline is OS presentation evidence, not photodiode measurement or touch-hardware latency.",
+  "trace": {
+    "start_ts": "182528642368942",
+    "end_ts": "182762473082394",
+    "trace_seconds": "233.830713",
+    "marker_process_count": "1",
+    "marker_pids": "29094",
+    "file": "s25-equalizer-final.pftrace",
+    "bytes": 135499938,
+    "stats": [
+      {
+        "name": "traced_chunks_discarded",
+        "value": "3",
+        "severity": "info"
+      },
+      {
+        "name": "traced_flushes_requested",
+        "value": "232",
+        "severity": "info"
+      },
+      {
+        "name": "traced_flushes_succeeded",
+        "value": "232",
+        "severity": "info"
+      }
+    ],
+    "sha256": "bacec67b2ccdad910680483552ba06fd43fc7af0159e9aff2f3e0b9261bd3ff6"
+  },
+  "app_report_file": "s25-equalizer-final-app.json",
+  "app_report_sha256": "ace06269caea00b86245315fed878931a3427a291216cdc337ab55a8344de51f",
+  "device": {
+    "deviceModel": "SM-S931B",
+    "sdkInt": 36,
+    "packageName": "fr.vueconfort.app.preview",
+    "nominalRefreshHzAtStart": 120.00000762939453
+  },
+  "coverage": {
+    "full_app_commands": 8723,
+    "traced_commands": 8723,
+    "all_app_commands_in_trace": true,
+    "verified_presentations": 8425,
+    "verified_fraction_of_trace": 0.9658374412472773,
+    "verified_fraction_of_entire_app_run": 0.9658374412472773,
+    "unverified_commands_in_trace": 298,
+    "unverified_commands_in_entire_run": 298,
+    "unique_verified_surface_frames": 8425,
+    "unique_verified_display_frames": 8425,
+    "known_metric_tokens": 8493,
+    "ancestor_tokens_agree_with_known": 8389,
+    "token_disagreement_command_ids": [
+      4294967305,
+      4294967546,
+      4294967547,
+      4294967548,
+      4294967549,
+      4294967949,
+      4294968399,
+      4294968601,
+      4294968603,
+      4294968847,
+      4294969047,
+      4294969050,
+      4294969248,
+      4294969249,
+      4294969492,
+      4294969494,
+      4294969696,
+      4294969698,
+      4294969700,
+      4294969702,
+      4294969897,
+      4294969898,
+      4294969901,
+      4294969902,
+      4294969903,
+      4294970139,
+      4294970140,
+      4294970143,
+      4294970146,
+      4294970147,
+      4294970343,
+      4294970349,
+      4294970547,
+      4294970550,
+      4294970790,
+      4294970792,
+      4294970793,
+      4294970794,
+      4294971197,
+      4294971198,
+      4294971200,
+      4294971439,
+      4294971443,
+      4294971643,
+      4294971647,
+      4294971648,
+      4294971649,
+      4294971845,
+      4294971846,
+      4294972087,
+      4294972090,
+      4294972091,
+      4294972292,
+      4294972295,
+      4294972296,
+      4294972738,
+      4294972740,
+      4294972940,
+      4294972941,
+      4294972945,
+      4294972946,
+      4294973142,
+      4294973144,
+      4294973386,
+      4294973389,
+      4294973593,
+      4294973594,
+      4294973596,
+      4294973792,
+      4294973793,
+      4294973796,
+      4294974034,
+      4294974035,
+      4294974036,
+      4294974037,
+      4294974038,
+      4294974237,
+      4294974238,
+      4294974240,
+      4294974242,
+      4294974444,
+      4294974445,
+      4294974684,
+      4294974685,
+      4294974687,
+      4294974688,
+      4294974887,
+      4294974888,
+      4294974890,
+      4294974893,
+      4294975090,
+      4294975092,
+      4294975093,
+      4294975333,
+      4294975337,
+      4294975338,
+      4294975535,
+      4294975536,
+      4294975537,
+      4294975742,
+      4294975743,
+      4294975983,
+      4294975984,
+      4294975987
+    ],
+    "first_draw_frame_dropped": 297,
+    "missing_surface_frames": 0,
+    "nonpresented_not_assumed_slow_or_fast": true
+  },
+  "conditional_command_to_present_ms": {
+    "count": 8425,
+    "p50": 23.641562,
+    "p95": 32.301094,
+    "p99": 40.3525,
+    "maximum": 58.448541
+  },
+  "conditional_trace_marker_to_present_ms": {
+    "count": 8425,
+    "p50": 23.627969,
+    "p95": 32.290104,
+    "p99": 40.34276,
+    "maximum": 58.419896
+  },
+  "clock_alignment": {
+    "source": "clock_snapshot CLOCK_MONOTONIC id3; most recent preceding snapshot, matching Perfetto clock-sync rule",
+    "snapshots": 242,
+    "trace_offset_spread_ns": 729,
+    "command_to_trace_marker_ms": {
+      "minimum": 0.00401,
+      "count": 8723,
+      "p50": 0.010626,
+      "p95": 0.03474,
+      "p99": 0.094792,
+      "maximum": 0.601979
+    }
+  },
+  "verified_latencies_above_50ms": 6,
+  "controls": {
+    "comfort": {
+      "commands": 1600,
+      "verified_presentations": 1600,
+      "verified_fraction": 1.0,
+      "first_draw_frame_dropped": 0,
+      "missing_surface_frame": 0,
+      "token_disagreements": 0,
+      "command_to_present_ms": {
+        "count": 1600,
+        "p50": 23.683801,
+        "p95": 32.304531,
+        "p99": 37.715207,
+        "maximum": 45.617604
+      },
+      "app_jank_labels": {
+        "Display HAL, App Deadline Missed": 37,
+        "Buffer Stuffing, SurfaceFlinger Stuffing": 382,
+        "App Deadline Missed, Buffer Stuffing": 29,
+        "Buffer Stuffing": 626,
+        "App Deadline Missed": 47,
+        "SurfaceFlinger Stuffing": 262,
+        "App Deadline Missed, SurfaceFlinger Stuffing": 8,
+        "Display HAL": 1,
+        "None": 207,
+        "App Deadline Missed, Buffer Stuffing, SurfaceFlinger Stuffing": 1
+      },
+      "display_jank_labels": {
+        "Display HAL": 38,
+        "SurfaceFlinger Stuffing": 653,
+        "None": 909
+      }
+    },
+    "contrast": {
+      "commands": 1600,
+      "verified_presentations": 1600,
+      "verified_fraction": 1.0,
+      "first_draw_frame_dropped": 0,
+      "missing_surface_frame": 0,
+      "token_disagreements": 0,
+      "command_to_present_ms": {
+        "count": 1600,
+        "p50": 23.55078,
+        "p95": 32.186249,
+        "p99": 37.769584,
+        "maximum": 46.047499
+      },
+      "app_jank_labels": {
+        "Display HAL, App Deadline Missed": 38,
+        "App Deadline Missed, Buffer Stuffing": 33,
+        "Buffer Stuffing": 799,
+        "App Deadline Missed": 69,
+        "Buffer Stuffing, SurfaceFlinger Stuffing": 152,
+        "SurfaceFlinger Stuffing": 157,
+        "App Deadline Missed, SurfaceFlinger Stuffing": 7,
+        "Display HAL": 1,
+        "None": 342,
+        "App Deadline Missed, Buffer Stuffing, SurfaceFlinger Stuffing": 2
+      },
+      "display_jank_labels": {
+        "Display HAL": 39,
+        "None": 1243,
+        "SurfaceFlinger Stuffing": 318
+      }
+    },
+    "intensity": {
+      "commands": 1600,
+      "verified_presentations": 1600,
+      "verified_fraction": 1.0,
+      "first_draw_frame_dropped": 0,
+      "missing_surface_frame": 0,
+      "token_disagreements": 0,
+      "command_to_present_ms": {
+        "count": 1600,
+        "p50": 23.706094,
+        "p95": 32.33427,
+        "p99": 38.261822,
+        "maximum": 53.487239
+      },
+      "app_jank_labels": {
+        "Display HAL, App Deadline Missed": 38,
+        "Buffer Stuffing, SurfaceFlinger Stuffing": 267,
+        "App Deadline Missed, Buffer Stuffing": 55,
+        "Buffer Stuffing": 974,
+        "App Deadline Missed": 56,
+        "None": 92,
+        "Display HAL": 1,
+        "SurfaceFlinger Stuffing": 111,
+        "App Deadline Missed, SurfaceFlinger Stuffing": 5,
+        "App Deadline Missed, Buffer Stuffing, SurfaceFlinger Stuffing": 1
+      },
+      "display_jank_labels": {
+        "Display HAL": 39,
+        "SurfaceFlinger Stuffing": 384,
+        "None": 1177
+      }
+    },
+    "original_down": {
+      "commands": 41,
+      "verified_presentations": 41,
+      "verified_fraction": 1.0,
+      "first_draw_frame_dropped": 0,
+      "missing_surface_frame": 0,
+      "token_disagreements": 0,
+      "command_to_present_ms": {
+        "count": 41,
+        "p50": 22.883384,
+        "p95": 31.386927,
+        "p99": 40.006041,
+        "maximum": 40.006041
+      },
+      "app_jank_labels": {
+        "None": 32,
+        "App Deadline Missed": 3,
+        "Buffer Stuffing": 3,
+        "SurfaceFlinger Stuffing": 3
+      },
+      "display_jank_labels": {
+        "None": 38,
+        "SurfaceFlinger Stuffing": 3
+      }
+    },
+    "original_up": {
+      "commands": 41,
+      "verified_presentations": 41,
+      "verified_fraction": 1.0,
+      "first_draw_frame_dropped": 0,
+      "missing_surface_frame": 0,
+      "token_disagreements": 0,
+      "command_to_present_ms": {
+        "count": 41,
+        "p50": 42.374061,
+        "p95": 44.114428,
+        "p99": 50.37479,
+        "maximum": 50.37479
+      },
+      "app_jank_labels": {
+        "App Deadline Missed": 36,
+        "Display HAL, App Deadline Missed": 2,
+        "App Deadline Missed, SurfaceFlinger Stuffing": 2,
+        "SurfaceFlinger Stuffing": 1
+      },
+      "display_jank_labels": {
+        "None": 36,
+        "Display HAL": 2,
+        "SurfaceFlinger Stuffing": 3
+      }
+    },
+    "scene": {
+      "commands": 41,
+      "verified_presentations": 13,
+      "verified_fraction": 0.3170731707317073,
+      "first_draw_frame_dropped": 28,
+      "missing_surface_frame": 0,
+      "token_disagreements": 0,
+      "command_to_present_ms": {
+        "count": 13,
+        "p50": 34.779894,
+        "p95": 58.448541,
+        "p99": 58.448541,
+        "maximum": 58.448541
+      },
+      "app_jank_labels": {
+        "App Deadline Missed": 1,
+        "Dropped Frame": 28,
+        "Buffer Stuffing": 10,
+        "App Deadline Missed, Buffer Stuffing": 2
+      },
+      "display_jank_labels": {
+        "None": 41
+      }
+    },
+    "sharpness": {
+      "commands": 1600,
+      "verified_presentations": 1600,
+      "verified_fraction": 1.0,
+      "first_draw_frame_dropped": 0,
+      "missing_surface_frame": 0,
+      "token_disagreements": 0,
+      "command_to_present_ms": {
+        "count": 1600,
+        "p50": 23.596041,
+        "p95": 32.207655,
+        "p99": 37.611353,
+        "maximum": 45.041198
+      },
+      "app_jank_labels": {
+        "Display HAL, App Deadline Missed": 40,
+        "App Deadline Missed, Buffer Stuffing": 31,
+        "Buffer Stuffing": 893,
+        "App Deadline Missed": 49,
+        "None": 234,
+        "Buffer Stuffing, SurfaceFlinger Stuffing": 176,
+        "SurfaceFlinger Stuffing": 175,
+        "App Deadline Missed, SurfaceFlinger Stuffing": 1,
+        "App Deadline Missed, Buffer Stuffing, SurfaceFlinger Stuffing": 1
+      },
+      "display_jank_labels": {
+        "Display HAL": 40,
+        "None": 1207,
+        "SurfaceFlinger Stuffing": 353
+      }
+    },
+    "size": {
+      "commands": 1640,
+      "verified_presentations": 1370,
+      "verified_fraction": 0.8353658536585366,
+      "first_draw_frame_dropped": 269,
+      "missing_surface_frame": 0,
+      "token_disagreements": 104,
+      "command_to_present_ms": {
+        "count": 1370,
+        "p50": 23.459426,
+        "p95": 26.506198,
+        "p99": 32.11948,
+        "maximum": 37.806613
+      },
+      "app_jank_labels": {
+        "Dropped Frame": 269,
+        "Buffer Stuffing": 854,
+        "App Deadline Missed": 81,
+        "App Deadline Missed, Buffer Stuffing": 44,
+        "None": 392
+      },
+      "display_jank_labels": {
+        "None": 1640
+      }
+    },
+    "text_weight": {
+      "commands": 560,
+      "verified_presentations": 560,
+      "verified_fraction": 1.0,
+      "first_draw_frame_dropped": 0,
+      "missing_surface_frame": 0,
+      "token_disagreements": 0,
+      "command_to_present_ms": {
+        "count": 560,
+        "p50": 23.888802,
+        "p95": 40.385052,
+        "p99": 45.8725,
+        "maximum": 53.78203
+      },
+      "app_jank_labels": {
+        "Display HAL, App Deadline Missed": 14,
+        "Buffer Stuffing, SurfaceFlinger Stuffing": 116,
+        "App Deadline Missed, Buffer Stuffing": 18,
+        "Buffer Stuffing": 398,
+        "App Deadline Missed": 11,
+        "SurfaceFlinger Stuffing": 3
+      },
+      "display_jank_labels": {
+        "Display HAL": 14,
+        "SurfaceFlinger Stuffing": 119,
+        "None": 427
+      }
+    }
+  },
+  "active_gesture_cadence": {
+    "comfort": {
+      "complete_gestures": 40,
+      "excluded_non40_command_groups": 0,
+      "callback_interval_ms": {
+        "count": 1560,
+        "p50": 16.666979,
+        "p95": 19.434896,
+        "p99": 25.454115,
+        "maximum": 33.613646
+      },
+      "callback_hz_during_active_spans": 60.22492625012753,
+      "verified_presented_update_intervals_per_active_second": 60.22492625012753,
+      "verified_presentation_interval_ms": {
+        "count": 1560,
+        "p50": 16.664167,
+        "p95": 16.667968,
+        "p99": 24.99552,
+        "maximum": 33.330781
+      },
+      "definition": "Completed 40-change gestures only. Active spans run first to last callback; rate counts distinct verified presented changes minus one per gesture over those same spans. Missing/dropped states are not invented. This is a conservative proof rate, not a guarantee that every unverified state was never displayed later."
+    },
+    "contrast": {
+      "complete_gestures": 40,
+      "excluded_non40_command_groups": 0,
+      "callback_interval_ms": {
+        "count": 1560,
+        "p50": 16.675052,
+        "p95": 22.625157,
+        "p99": 26.34776,
+        "maximum": 38.251094
+      },
+      "callback_hz_during_active_spans": 60.22528541542791,
+      "verified_presented_update_intervals_per_active_second": 60.22528541542791,
+      "verified_presentation_interval_ms": {
+        "count": 1560,
+        "p50": 16.664376,
+        "p95": 16.668855,
+        "p99": 25.000521,
+        "maximum": 33.338594
+      },
+      "definition": "Completed 40-change gestures only. Active spans run first to last callback; rate counts distinct verified presented changes minus one per gesture over those same spans. Missing/dropped states are not invented. This is a conservative proof rate, not a guarantee that every unverified state was never displayed later."
+    },
+    "intensity": {
+      "complete_gestures": 40,
+      "excluded_non40_command_groups": 0,
+      "callback_interval_ms": {
+        "count": 1560,
+        "p50": 16.666459,
+        "p95": 21.544219,
+        "p99": 27.023594,
+        "maximum": 36.599584
+      },
+      "callback_hz_during_active_spans": 60.18389521351295,
+      "verified_presented_update_intervals_per_active_second": 60.18389521351295,
+      "verified_presentation_interval_ms": {
+        "count": 1560,
+        "p50": 16.664323,
+        "p95": 16.668021,
+        "p99": 24.999115,
+        "maximum": 33.331458
+      },
+      "definition": "Completed 40-change gestures only. Active spans run first to last callback; rate counts distinct verified presented changes minus one per gesture over those same spans. Missing/dropped states are not invented. This is a conservative proof rate, not a guarantee that every unverified state was never displayed later."
+    },
+    "sharpness": {
+      "complete_gestures": 40,
+      "excluded_non40_command_groups": 0,
+      "callback_interval_ms": {
+        "count": 1560,
+        "p50": 16.67125,
+        "p95": 20.053802,
+        "p99": 25.636823,
+        "maximum": 32.424688
+      },
+      "callback_hz_during_active_spans": 60.2576552189366,
+      "verified_presented_update_intervals_per_active_second": 60.2576552189366,
+      "verified_presentation_interval_ms": {
+        "count": 1560,
+        "p50": 16.664635,
+        "p95": 16.667969,
+        "p99": 24.998281,
+        "maximum": 33.326302
+      },
+      "definition": "Completed 40-change gestures only. Active spans run first to last callback; rate counts distinct verified presented changes minus one per gesture over those same spans. Missing/dropped states are not invented. This is a conservative proof rate, not a guarantee that every unverified state was never displayed later."
+    },
+    "size": {
+      "complete_gestures": 41,
+      "excluded_non40_command_groups": 0,
+      "callback_interval_ms": {
+        "count": 1599,
+        "p50": 16.666666,
+        "p95": 24.727291,
+        "p99": 27.474844,
+        "maximum": 36.416198
+      },
+      "callback_hz_during_active_spans": 60.184151901585366,
+      "verified_presented_update_intervals_per_active_second": 50.02172475122386,
+      "verified_presentation_interval_ms": {
+        "count": 1329,
+        "p50": 16.665313,
+        "p95": 33.328384,
+        "p99": 74.995469,
+        "maximum": 141.664063
+      },
+      "definition": "Completed 40-change gestures only. Active spans run first to last callback; rate counts distinct verified presented changes minus one per gesture over those same spans. Missing/dropped states are not invented. This is a conservative proof rate, not a guarantee that every unverified state was never displayed later."
+    },
+    "text_weight": {
+      "complete_gestures": 14,
+      "excluded_non40_command_groups": 0,
+      "callback_interval_ms": {
+        "count": 546,
+        "p50": 16.677448,
+        "p95": 19.431511,
+        "p99": 28.47625,
+        "maximum": 46.00198
+      },
+      "callback_hz_during_active_spans": 60.279798401915926,
+      "verified_presented_update_intervals_per_active_second": 60.279798401915926,
+      "verified_presentation_interval_ms": {
+        "count": 546,
+        "p50": 16.663697,
+        "p95": 16.667239,
+        "p99": 24.99698,
+        "maximum": 33.329584
+      },
+      "definition": "Completed 40-change gestures only. Active spans run first to last callback; rate counts distinct verified presented changes minus one per gesture over those same spans. Missing/dropped states are not invented. This is a conservative proof rate, not a guarantee that every unverified state was never displayed later."
+    }
+  },
+  "command_frame_jank": {
+    "app_present_types": {
+      "Late Present": 7127,
+      "Dropped Frame": 297,
+      "On-time Present": 1299
+    },
+    "app_jank_labels": {
+      "App Deadline Missed": 353,
+      "Dropped Frame": 297,
+      "Buffer Stuffing": 4557,
+      "App Deadline Missed, Buffer Stuffing": 212,
+      "Display HAL, App Deadline Missed": 169,
+      "None": 1299,
+      "Buffer Stuffing, SurfaceFlinger Stuffing": 1093,
+      "SurfaceFlinger Stuffing": 712,
+      "App Deadline Missed, SurfaceFlinger Stuffing": 23,
+      "Display HAL": 3,
+      "App Deadline Missed, Buffer Stuffing, SurfaceFlinger Stuffing": 5
+    },
+    "display_present_types": {
+      "On-time Present": 6718,
+      "Late Present": 2005
+    },
+    "display_jank_labels": {
+      "None": 6718,
+      "Display HAL": 172,
+      "SurfaceFlinger Stuffing": 1833
+    }
+  },
+  "temporal_windows": [
+    {
+      "from_second": 0,
+      "to_second": 60,
+      "commands": 2895,
+      "command_to_draw_ms": {
+        "count": 2895,
+        "p50": 3.195729,
+        "p95": 7.352813,
+        "p99": 20.160312,
+        "maximum": 41.496718
+      },
+      "conditional_command_to_present_ms": {
+        "count": 2781,
+        "p50": 23.665208,
+        "p95": 32.21974,
+        "p99": 43.461145,
+        "maximum": 53.78203
+      },
+      "verified_fraction": 0.960621761658031
+    },
+    {
+      "from_second": 60,
+      "to_second": 120,
+      "commands": 2904,
+      "command_to_draw_ms": {
+        "count": 2904,
+        "p50": 2.603802,
+        "p95": 4.984844,
+        "p99": 13.702812,
+        "maximum": 44.285
+      },
+      "conditional_command_to_present_ms": {
+        "count": 2825,
+        "p50": 23.599011,
+        "p95": 32.303593,
+        "p99": 37.93,
+        "maximum": 58.448541
+      },
+      "verified_fraction": 0.9727961432506887
+    },
+    {
+      "from_second": 120,
+      "to_second": 180,
+      "commands": 2884,
+      "command_to_draw_ms": {
+        "count": 2884,
+        "p50": 2.452032,
+        "p95": 4.85349,
+        "p99": 12.700781,
+        "maximum": 39.023906
+      },
+      "conditional_command_to_present_ms": {
+        "count": 2785,
+        "p50": 23.662187,
+        "p95": 32.352499,
+        "p99": 40.409895,
+        "maximum": 46.473021
+      },
+      "verified_fraction": 0.9656726768377254
+    },
+    {
+      "from_second": 180,
+      "to_second": 181.294578525,
+      "commands": 40,
+      "command_to_draw_ms": {
+        "count": 40,
+        "p50": 2.32526,
+        "p95": 7.775,
+        "p99": 21.9225,
+        "maximum": 21.9225
+      },
+      "conditional_command_to_present_ms": {
+        "count": 34,
+        "p50": 15.444948,
+        "p95": 24.211719,
+        "p99": 35.619219,
+        "maximum": 35.619219
+      },
+      "verified_fraction": 0.85
+    }
+  ],
+  "trace_marker_minus_api_command_to_draw_delta_ms": {
+    "minimum": -0.592136,
+    "count": 8723,
+    "p50": 0.00073,
+    "p95": 0.004531,
+    "p99": 0.019583,
+    "maximum": 2.264583
+  },
+  "memory_full_app_run": {
+    "sampling_seconds": 181.247876441,
+    "allocation_scope": "Entire instrumented process, including instrumentation and recorder; not renderer-only",
+    "allocated_mib": 3565.3750915527344,
+    "allocated_mib_per_second": 19.671265460113347,
+    "gc_count_delta": 150,
+    "gc_time_ms_delta": 2469,
+    "interpretation": "Cumulative allocations are not retained heap. Periodic samples do not establish an instantaneous peak or absence of leaks. Whole instrumented process includes Compose, UI automation, renderer and recorder; no precise renderer-only attribution. ART gc-time is cumulative GC activity, not a measurement of UI stop-the-world pauses.",
+    "javaUsedBytes": {
+      "start_mib": 7.8780059814453125,
+      "end_mib": 11.588897705078125,
+      "sampled_max_mib": 29.249053955078125,
+      "last_minute_min_mib": 10.999053955078125,
+      "last_minute_max_mib": 29.249053955078125
+    },
+    "nativeAllocatedBytes": {
+      "start_mib": 14.92376708984375,
+      "end_mib": 81.17860412597656,
+      "sampled_max_mib": 91.79850769042969,
+      "last_minute_min_mib": 76.32295227050781,
+      "last_minute_max_mib": 91.79850769042969
+    },
+    "totalPssBytes": {
+      "start_mib": 159.4873046875,
+      "end_mib": 215.3916015625,
+      "sampled_max_mib": 254.6689453125,
+      "last_minute_min_mib": 215.3916015625,
+      "last_minute_max_mib": 254.6689453125
+    },
+    "privateDirtyBytes": {
+      "start_mib": 114.84765625,
+      "end_mib": 168.3984375,
+      "sampled_max_mib": 207.671875,
+      "last_minute_min_mib": 168.3984375,
+      "last_minute_max_mib": 207.671875
+    },
+    "graphicsPrivateBytes": {
+      "start_mib": 81.67578125,
+      "end_mib": 61.01171875,
+      "sampled_max_mib": 81.67578125,
+      "last_minute_min_mib": 61.01171875,
+      "last_minute_max_mib": 80.46484375
+    }
+  },
+  "full_app_run": {
+    "actualManipulationMillis": 180915,
+    "completedSliderGestures": 215,
+    "moveEventsInjected": 9030,
+    "survivedProlongedManipulation": true,
+    "commandToDraw": {
+      "count": 8723,
+      "p50Ms": 2.696718,
+      "p95Ms": 6.126354,
+      "p99Ms": 16.135,
+      "maximumMs": 44.285
+    },
+    "commandToAppFrameComplete": {
+      "count": 8493,
+      "p50Ms": 6.161406,
+      "p95Ms": 13.140364,
+      "p99Ms": 29.414479,
+      "maximumMs": 45.877864
+    },
+    "frameCount": 17860,
+    "appDeadlineMisses": 771,
+    "deadlineFromSystemFrames": 17860,
+    "frameMetricsReportsDropped": 0,
+    "coalescedBeforeDraw": 0,
+    "unmatchedDraws": 230,
+    "commandsPendingDraw": 0
+  },
+  "limitations": [
+    "Conditional presentation quantiles exclude explicit drops, missing surfaces and token disagreements; coverage must accompany them.",
+    "Only the first draw for each command is instrumented. A dropped first draw may carry its state into a later frame, but that propagation is not proven here.",
+    "FrameMetrics timestamp joins can miss or misassociate frames during Android 16 buffer-stuffing recovery; do not use their aggregate as exact presentation evidence.",
+    "~60 callbacks/s is distinct from ~60 verified displayed changes/s, especially for size/scene transitions.",
+    "A single instrumented S25 run is not a thermal, refresh-mode, GPU-memory or multi-device certification."
+  ]
+}
