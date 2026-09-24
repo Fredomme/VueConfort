@@ -407,7 +407,7 @@ fun OpticalPrescriptionScreen(
                         draft.showErrors = true
                         if (validation.isValid && candidate.isValid) draft.step = 2
                     }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(16.dp)) {
-                        Text("Voir mon point de départ")
+                        Text("Vérifier et continuer")
                     }
                     TextButton(onClick = { draft.step = 0 }) { Text("Choisir un autre document ou mode de saisie") }
                 }
@@ -415,23 +415,15 @@ fun OpticalPrescriptionScreen(
 
             if (draft.step == 2) {
                 BilanCard(highlighted = true) {
-                    Text("Un point de départ à essayer", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                    Text("Le bilan peut guider la taille du texte et le grossissement. Vous allez ensuite comparer et affiner le résultat selon votre lecture.")
-                    Text("Il ne permet pas, à lui seul, de transformer l’écran en verre correcteur. Une ordonnance de loin ne décrit pas automatiquement votre besoin devant le téléphone.",
+                    Text("Votre bilan est prêt", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                    Text("Vos valeurs confirmées restent sur ce téléphone, séparées de vos préférences de lecture.")
+                    Text("Vous allez retrouver le même égaliseur, avec vos réglages enregistrés ou un point de départ neutre. Ce premier étage ne calcule pas encore de correction optique à partir du bilan.",
                         style = MaterialTheme.typography.bodyMedium)
                 }
                 recommendation?.let { value ->
-                    ReadingBeforeAfter(currentVisualProfile, value.visualProfile)
-                    BilanCard {
-                        Text("Grossissement proposé : ${"%.2f".format(value.assistProfile.magnificationScale)}×",
-                            style = MaterialTheme.typography.titleMedium)
-                        value.reasons.forEach { Text(it) }
-                        Text("Ces propositions sont des réglages de confort à confirmer pendant l’essai.",
-                            fontWeight = FontWeight.Medium)
-                    }
                     Button(onClick = { onApplyAndCalibrate(candidate, value) }, enabled = !saving,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(16.dp)) {
-                        Text("Enregistrer mon bilan et essayer")
+                        Text("Enregistrer et ouvrir l’égaliseur")
                     }
                 }
                 OutlinedButton(onClick = { draft.step = 1 }, enabled = !saving, modifier = Modifier.fillMaxWidth()) { Text("Revoir les valeurs") }
@@ -447,7 +439,7 @@ fun OpticalPrescriptionScreen(
     if (draft.showPreview && document != null) DocumentPreview(document) { draft.showPreview = false }
     if (confirmDelete) AlertDialog(
         onDismissRequest = { confirmDelete = false }, title = { Text("Supprimer mes bilans ?") },
-        text = { Text("Les valeurs du bilan actuel et l’historique des bilans seront supprimés de VueConfort. Vos documents d’origine restent dans leur emplacement. Le profil de lecture « Ma vue » reste modifiable dans Profils.") },
+        text = { Text("Les valeurs du bilan actuel et l’historique des bilans seront supprimés de VueConfort. Vos documents d’origine restent dans leur emplacement. Votre profil d’égaliseur et vos réglages de loupe sont conservés.") },
         confirmButton = { TextButton(onClick = { confirmDelete = false; onDelete() }, enabled = !saving) { Text("Supprimer les bilans") } },
         dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Annuler") } }
     )

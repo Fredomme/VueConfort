@@ -191,6 +191,9 @@ class VueConfortViewModel(
         viewModelScope.launch { repository.saveOpticalPrescription(value) }
     }
 
+    fun saveConfirmedPrescription(value: OpticalPrescription, onResult: (Result<Unit>) -> Unit) =
+        performPrescriptionOperation(onResult) { repository.saveOpticalPrescription(value) }
+
     fun savePrescriptionAndAssistProfile(
         value: OpticalPrescription,
         profile: AssistProfile,

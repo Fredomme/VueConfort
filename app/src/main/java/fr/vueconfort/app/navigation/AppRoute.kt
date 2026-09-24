@@ -6,6 +6,8 @@ sealed class AppRoute(
     data object Home :
         AppRoute("home")
 
+    data object Equalizer : AppRoute("equalizer")
+
     data object QuickReadingSetup :
         AppRoute("quick_reading_setup")
 

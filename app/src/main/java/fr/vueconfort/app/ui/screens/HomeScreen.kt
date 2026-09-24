@@ -25,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +41,7 @@ fun HomeScreen(
     profile: VisualProfile,
     onQuestionnaire: () -> Unit,
     onCalibration: () -> Unit,
+    onEqualizer: () -> Unit,
     onVisualAssessment: () -> Unit,
     onReading: () -> Unit,
     onProfile: () -> Unit,
@@ -71,11 +73,12 @@ fun HomeScreen(
                 style = MaterialTheme.typography.bodyLarge)
 
             HomeSection(highlighted = true) {
-                Text("Un réglage qui vous convient", style = MaterialTheme.typography.titleLarge,
+                Text("Votre égaliseur visuel", style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold)
-                Text("Comparez le texte et affinez sa taille, ses contrastes et ses espacements.")
-                Button(onClick = onCalibration, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                    shape = RoundedCornerShape(16.dp)) { Text("Améliorer ma lecture") }
+                Text("Regardez, réglez, comparez. Trouvez votre confort sur un texte ou une image, avec ou sans bilan.")
+                Button(onClick = onEqualizer, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("eq_open"),
+                    shape = RoundedCornerShape(16.dp)) { Text("Ouvrir l’égaliseur") }
+                TextButton(onClick = onEqualizer) { Text("Essayer immédiatement · sans correction connue") }
             }
 
             HomeSection {
@@ -84,7 +87,7 @@ fun HomeScreen(
                 Text("Vous avez une ordonnance ou un compte rendu ? Importez une photo ou un PDF, vérifiez les valeurs, puis essayez un point de départ pour lire.")
                 OutlinedButton(onClick = onOpticalPrescription,
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(16.dp)) {
-                    Text("Ajouter ou consulter mon bilan")
+                    Text("J’ai un bilan / je connais ma correction")
                 }
                 Text("Sans bilan, vous pouvez aussi régler votre confort de lecture.",
                     style = MaterialTheme.typography.bodySmall)
@@ -106,9 +109,9 @@ fun HomeScreen(
             }
 
             HomeSection {
-                Text(if (profile.calibrated) "Mon profil de lecture" else "Mon profil à affiner",
+                Text("Profils du lecteur et de la loupe",
                     style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text("Vos préférences de taille et d’espacement sont conservées.")
+                Text("Retrouvez les réglages de vos autres outils de lecture.")
                 TextButton(onClick = onProfile) { Text("Voir mon profil") }
             }
 

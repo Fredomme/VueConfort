@@ -17,6 +17,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import fr.vueconfort.app.equalizer.EqualizerScreen
 import fr.vueconfort.app.calibration.CalibrationViewModel
 import fr.vueconfort.app.model.AssistProfile
 import fr.vueconfort.app.recommendation.RecommendationEngine
@@ -88,6 +89,7 @@ fun VueConfortApp(
             ) {
                 HomeScreen(
                     profile = profile,
+                    onEqualizer = { navController.navigate(AppRoute.Equalizer.route) },
                     onQuestionnaire = {
                         navController.navigate(
                             AppRoute.QuickReadingSetup.route
@@ -128,6 +130,13 @@ fun VueConfortApp(
                     onOpticalPrescription = {
                         navController.navigate(AppRoute.OpticalPrescription.route)
                     }
+                )
+            }
+
+            composable(route = AppRoute.Equalizer.route) {
+                EqualizerScreen(
+                    onBack = { navController.popBackStack() },
+                    onBilan = { navController.navigate(AppRoute.OpticalPrescription.route) }
                 )
             }
 
@@ -327,11 +336,13 @@ fun VueConfortApp(
                         if (!saving) {
                             saving = true
                             operationError = null
-                            mainViewModel.savePrescriptionAndAssistProfile(prescription, recommendation.assistProfile) { result ->
+                            mainViewModel.saveConfirmedPrescription(prescription) { result ->
                                 saving = false
                                 if (result.isSuccess) {
-                                    prescriptionCalibrationBase = recommendation.visualProfile
-                                    navController.navigate(AppRoute.Calibration.route)
+                                    navController.navigate(AppRoute.Equalizer.route) {
+                                        popUpTo(AppRoute.Equalizer.route) { inclusive = false }
+                                        launchSingleTop = true
+                                    }
                                 } else {
                                     operationError = "Enregistrement impossible. Vos valeurs restent à l’écran ; réessayez."
                                 }
