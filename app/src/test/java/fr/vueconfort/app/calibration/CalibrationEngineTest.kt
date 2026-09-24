@@ -29,6 +29,16 @@ class CalibrationEngineTest {
     }
 
     @Test
+    fun laterComparison_keepsEarlierReadingSizeChoice() {
+        val initial = VisualProfile(fontSizeSp = 22f, fontWeight = 450)
+        val trials = CalibrationEngine.createTrials(initial)
+        val sizeChoice = CalibrationEngine.applyChoice(initial, trials.first(), CalibrationChoice.OPTION_B)
+        val weightChoice = CalibrationEngine.applyChoice(sizeChoice, trials[1], CalibrationChoice.OPTION_B)
+        assertEquals(24f, weightChoice.fontSizeSp)
+        assertEquals(550, weightChoice.fontWeight)
+    }
+
+    @Test
     fun confidence_combinesCompletionAndDecisiveness() {
         val trials = CalibrationEngine.createTrials(VisualProfile()).mapIndexed { index, trial ->
             when (index) {

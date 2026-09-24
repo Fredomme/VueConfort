@@ -4,6 +4,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +22,7 @@ import fr.vueconfort.app.model.AssistProfile
 import fr.vueconfort.app.recommendation.RecommendationEngine
 import fr.vueconfort.app.ui.screens.CalibrationScreen
 import fr.vueconfort.app.ui.screens.HomeScreen
+import fr.vueconfort.app.ui.screens.OpticalPrescriptionScreen
 import fr.vueconfort.app.ui.screens.ProfileScreen
 import fr.vueconfort.app.ui.screens.QuestionnaireScreen
 import fr.vueconfort.app.ui.screens.QuickReadingSetupScreen
@@ -61,6 +65,12 @@ fun VueConfortApp(
         mainViewModel.standardizedAssessments.collectAsStateWithLifecycle()
     val onboardingCompleted by
         mainViewModel.onboardingCompleted.collectAsStateWithLifecycle()
+
+    val opticalPrescription by
+        mainViewModel.opticalPrescription.collectAsStateWithLifecycle()
+    var prescriptionCalibrationBase by remember {
+        mutableStateOf<fr.vueconfort.app.model.VisualProfile?>(null)
+    }
 
     if (onboardingCompleted == null) {
         MaterialTheme { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
@@ -114,6 +124,9 @@ fun VueConfortApp(
                     },
                     onMagnifierSetup = {
                         navController.navigate(AppRoute.Welcome.route)
+                    },
+                    onOpticalPrescription = {
+                        navController.navigate(AppRoute.OpticalPrescription.route)
                     }
                 )
             }
@@ -172,7 +185,7 @@ fun VueConfortApp(
                     CalibrationViewModel = viewModel()
 
                 CalibrationScreen(
-                    baseProfile = profile,
+                    baseProfile = prescriptionCalibrationBase ?: profile,
                     viewModel = calibrationViewModel,
                     onCalibrationCompleted = {
                         calibratedProfile ->
@@ -181,6 +194,7 @@ fun VueConfortApp(
                             calibratedProfile
                         )
 
+                        prescriptionCalibrationBase = null
                         calibrationViewModel.reset()
 
                         navController.popBackStack(
@@ -189,6 +203,7 @@ fun VueConfortApp(
                         )
                     },
                     onBack = {
+                        prescriptionCalibrationBase = null
                         calibrationViewModel.reset()
                         navController.popBackStack()
                     }
@@ -296,6 +311,47 @@ fun VueConfortApp(
                     profile = activeAssistProfile,
                     onSave = mainViewModel::saveAssistProfile,
                     onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(route = AppRoute.OpticalPrescription.route) {
+                var saving by remember { mutableStateOf(false) }
+                var operationError by remember { mutableStateOf<String?>(null) }
+                OpticalPrescriptionScreen(
+                    saved = opticalPrescription,
+                    currentAssistProfile = activeAssistProfile,
+                    currentVisualProfile = profile,
+                    latestLegacyAssessment = visualAssessments.maxByOrNull { it.createdAtMillis },
+                    latestStandardizedAssessment = standardizedAssessments.maxByOrNull { it.createdAtMillis },
+                    onApplyAndCalibrate = { prescription, recommendation ->
+                        if (!saving) {
+                            saving = true
+                            operationError = null
+                            mainViewModel.savePrescriptionAndAssistProfile(prescription, recommendation.assistProfile) { result ->
+                                saving = false
+                                if (result.isSuccess) {
+                                    prescriptionCalibrationBase = recommendation.visualProfile
+                                    navController.navigate(AppRoute.Calibration.route)
+                                } else {
+                                    operationError = "Enregistrement impossible. Vos valeurs restent à l’écran ; réessayez."
+                                }
+                            }
+                        }
+                    },
+                    onDelete = {
+                        if (!saving) {
+                            saving = true
+                            operationError = null
+                            mainViewModel.deleteOpticalPrescription { result ->
+                                saving = false
+                                if (result.isSuccess) navController.popBackStack()
+                                else operationError = "Suppression impossible. Réessayez avant de quitter cet écran."
+                            }
+                        }
+                    },
+                    onBack = { if (!saving) navController.popBackStack() },
+                    saving = saving,
+                    operationError = operationError
                 )
             }
 

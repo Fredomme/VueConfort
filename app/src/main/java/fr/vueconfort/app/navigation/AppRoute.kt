@@ -24,6 +24,9 @@ sealed class AppRoute(
     data object OpticalSettings :
         AppRoute("optical_settings")
 
+    data object OpticalPrescription :
+        AppRoute("optical_prescription")
+
     data object Reading :
         AppRoute("reading")
 

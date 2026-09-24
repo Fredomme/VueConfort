@@ -9,6 +9,7 @@ import fr.vueconfort.app.model.AutomationRule
 import fr.vueconfort.app.model.AutomationStatus
 import fr.vueconfort.app.model.UserVisualContext
 import fr.vueconfort.app.model.VisualProfile
+import fr.vueconfort.app.model.OpticalPrescription
 import fr.vueconfort.app.assessment.VisualComfortAssessment
 import fr.vueconfort.app.assessment.StandardizedAssessmentReport
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import java.util.UUID
 
 class VueConfortViewModel(
@@ -37,6 +39,20 @@ class VueConfortViewModel(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = UserVisualContext()
+        )
+
+    val opticalPrescription: StateFlow<OpticalPrescription?> =
+        repository.opticalPrescription.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
+
+    val opticalPrescriptionHistory: StateFlow<List<OpticalPrescription>> =
+        repository.opticalPrescriptionHistory.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyList()
         )
 
     val assistProfiles: StateFlow<List<AssistProfile>> =
@@ -170,6 +186,38 @@ class VueConfortViewModel(
             repository.saveUserContext(userContext)
         }
     }
+
+    fun saveOpticalPrescription(value: OpticalPrescription) {
+        viewModelScope.launch { repository.saveOpticalPrescription(value) }
+    }
+
+    fun savePrescriptionAndAssistProfile(
+        value: OpticalPrescription,
+        profile: AssistProfile,
+        onResult: (Result<Unit>) -> Unit
+    ) = performPrescriptionOperation(onResult) {
+        repository.savePrescriptionAndAssistProfile(value, profile)
+    }
+
+    private fun performPrescriptionOperation(
+        onResult: (Result<Unit>) -> Unit,
+        operation: suspend () -> Unit
+    ) {
+        viewModelScope.launch {
+            val result = try {
+                operation()
+                Result.success(Unit)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Result.failure(error)
+            }
+            onResult(result)
+        }
+    }
+
+    fun deleteOpticalPrescription(onResult: (Result<Unit>) -> Unit) =
+        performPrescriptionOperation(onResult) { repository.deleteOpticalPrescription() }
 
     fun resetAll() {
         viewModelScope.launch {

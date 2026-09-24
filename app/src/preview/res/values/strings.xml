@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VueConfort Aperçu</string>
+    <string name="magnifier_service_name">VueConfort Aperçu — lecture</string>
+</resources>

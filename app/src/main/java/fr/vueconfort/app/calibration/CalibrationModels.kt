@@ -146,7 +146,19 @@ object CalibrationEngine {
             CalibrationChoice.NO_DIFFERENCE -> currentProfile
         }
 
-        return selectedProfile.copy(
+        val accumulated = when (trial.parameter) {
+            CalibrationParameter.FONT_SIZE -> currentProfile.copy(fontSizeSp = selectedProfile.fontSizeSp)
+            CalibrationParameter.FONT_WEIGHT -> currentProfile.copy(fontWeight = selectedProfile.fontWeight)
+            CalibrationParameter.LETTER_SPACING -> currentProfile.copy(letterSpacingSp = selectedProfile.letterSpacingSp)
+            CalibrationParameter.LINE_HEIGHT -> currentProfile.copy(lineHeightMultiplier = selectedProfile.lineHeightMultiplier)
+            CalibrationParameter.CONTRAST -> currentProfile.copy(foregroundArgb = selectedProfile.foregroundArgb)
+            CalibrationParameter.BACKGROUND -> currentProfile.copy(backgroundArgb = selectedProfile.backgroundArgb)
+            CalibrationParameter.COLUMN_WIDTH -> currentProfile.copy(columnWidthPercent = selectedProfile.columnWidthPercent)
+            CalibrationParameter.MARGINS -> currentProfile.copy(horizontalMarginDp = selectedProfile.horizontalMarginDp)
+            CalibrationParameter.WARMTH -> currentProfile.copy(warmthPercent = selectedProfile.warmthPercent)
+            CalibrationParameter.DESATURATION -> currentProfile.copy(desaturationPercent = selectedProfile.desaturationPercent)
+        }
+        return accumulated.copy(
             id = currentProfile.id,
             name = currentProfile.name,
             createdAtMillis = currentProfile.createdAtMillis,

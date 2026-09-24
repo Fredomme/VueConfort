@@ -27,6 +27,7 @@ android {
         targetSdk = 36
         versionCode = releaseVersionCode
         versionName = releaseVersionName
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildFeatures {
@@ -72,7 +73,21 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
+        create("preview") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".preview"
+            versionNameSuffix = "-preview"
+            matchingFallbacks += "debug"
+        }
     }
+
+    // Exercises the commercial main sources in an isolated package, without the research launcher.
+    sourceSets.getByName("preview").java.srcDir("src/release/java")
+    if (providers.gradleProperty("commercialPreviewTests").isPresent) {
+        testBuildType = "preview"
+        sourceSets.getByName("androidTest").java.setSrcDirs(listOf("src/androidTestPreview/java"))
+    }
+
 }
 
 dependencies {
@@ -91,10 +106,14 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation("androidx.navigation:navigation-compose:2.8.5")
     implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation("com.google.mlkit:text-recognition:16.0.1")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+    androidTestImplementation("androidx.test:core:1.6.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:runner:1.6.2")
 }

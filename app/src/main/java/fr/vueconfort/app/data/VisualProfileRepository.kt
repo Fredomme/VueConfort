@@ -1,9 +1,12 @@
 package fr.vueconfort.app.data
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.MutablePreferences
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -19,6 +22,9 @@ import fr.vueconfort.app.model.AutomationTrigger
 import fr.vueconfort.app.model.PrimaryUsage
 import fr.vueconfort.app.model.UserVisualContext
 import fr.vueconfort.app.model.VisualProfile
+import fr.vueconfort.app.model.OpticalPrescription
+import fr.vueconfort.app.model.OpticalPrescriptionCodec
+import fr.vueconfort.app.prescription.LocalDocumentReader
 import fr.vueconfort.app.assessment.AssessmentDistance
 import fr.vueconfort.app.assessment.EyeComfortResult
 import fr.vueconfort.app.assessment.ResultReliability
@@ -73,6 +79,14 @@ class VisualProfileRepository(
 
     val onboardingCompleted: Flow<Boolean> =
         safePreferences.map { it[Keys.ONBOARDING_COMPLETED] ?: false }
+    val opticalPrescription: Flow<OpticalPrescription?> =
+        safePreferences.map { OpticalPrescriptionCodec.decode(it[Keys.OPTICAL_PRESCRIPTION]) }
+    val opticalPrescriptionHistory: Flow<List<OpticalPrescription>> =
+        safePreferences.map { preferences ->
+            preferences[Keys.OPTICAL_PRESCRIPTION_HISTORY].orEmpty().lineSequence()
+                .mapNotNull(OpticalPrescriptionCodec::decode)
+                .sortedByDescending { it.updatedAtMillis }.toList()
+        }
     val visualAssessments: Flow<List<VisualComfortAssessment>> =
         safePreferences.map {
             decodeAssessments(it[Keys.VISUAL_ASSESSMENTS])
@@ -277,6 +291,75 @@ class VisualProfileRepository(
                 userContext.changesReadingDistance
             preferences[Keys.PRIMARY_USAGE] =
                 userContext.primaryUsage.name
+        }
+    }
+
+    suspend fun saveOpticalPrescription(value: OpticalPrescription) {
+        require(value.isValid) { value.validationErrors().joinToString(" ") }
+        context.vueConfortDataStore.edit { preferences ->
+            writePrescription(preferences, value)
+        }
+    }
+
+    /** Commit the confirmed document and selected comfort profile together. */
+    suspend fun savePrescriptionAndAssistProfile(value: OpticalPrescription, profile: AssistProfile) {
+        require(value.isValid) { value.validationErrors().joinToString(" ") }
+        context.vueConfortDataStore.edit { preferences ->
+            val profiles = decodeProfiles(preferences[Keys.ASSIST_PROFILES])
+                .ifEmpty { AssistProfile.defaults() }.toMutableList()
+            val clean = uniqueName(profile.sanitized(), profiles)
+            val index = profiles.indexOfFirst { it.id == clean.id }
+            if (index >= 0) profiles[index] = clean else profiles += clean
+            writePrescription(preferences, value)
+            preferences[Keys.ASSIST_PROFILES] = encodeProfiles(profiles)
+            preferences[Keys.ACTIVE_ASSIST_PROFILE_ID] = clean.id
+            preferences[Keys.OVERLAY_PROFILE_ID] = clean.id
+            preferences[Keys.OVERLAY_SCALE] = clean.magnificationScale
+            preferences[Keys.OVERLAY_ALPHA] = clean.overlayAlpha
+            preferences[Keys.OVERLAY_LOCKED] = clean.locked
+            preferences[Keys.OVERLAY_EXPANDED] = clean.expanded
+            preferences[Keys.MANUAL_UNTIL] = System.currentTimeMillis() + 15 * 60_000L
+            preferences[Keys.AUTOMATION_SOURCE] = "Manuel"
+            preferences[Keys.AUTOMATION_REASON] = "Essai de lecture après confirmation du bilan"
+            preferences[Keys.ACTIVE_RULE_ID] = ""
+            preferences[Keys.LAST_AUTOMATION_AT] = System.currentTimeMillis()
+        }
+    }
+
+    private fun writePrescription(preferences: MutablePreferences, value: OpticalPrescription) {
+        val stamped = value.copy(updatedAtMillis = System.currentTimeMillis())
+        preferences[Keys.OPTICAL_PRESCRIPTION] = OpticalPrescriptionCodec.encode(stamped)
+        val history = preferences[Keys.OPTICAL_PRESCRIPTION_HISTORY].orEmpty()
+            .lineSequence().mapNotNull(OpticalPrescriptionCodec::decode)
+            .filterNot { it.updatedAtMillis == stamped.updatedAtMillis }.toMutableList()
+        history += stamped
+        preferences[Keys.OPTICAL_PRESCRIPTION_HISTORY] = history
+            .sortedByDescending { it.updatedAtMillis }.take(20)
+            .joinToString("\n", transform = OpticalPrescriptionCodec::encode)
+    }
+
+    suspend fun deleteOpticalPrescription() {
+        LocalDocumentReader.clearAbandonedTemporaryCopies(context)
+        context.vueConfortDataStore.edit { preferences ->
+            releasePrescriptionDocumentGrants(preferences)
+            preferences.remove(Keys.OPTICAL_PRESCRIPTION)
+            preferences.remove(Keys.OPTICAL_PRESCRIPTION_HISTORY)
+        }
+    }
+
+    private fun releasePrescriptionDocumentGrants(preferences: Preferences) {
+        val prescriptions = listOfNotNull(OpticalPrescriptionCodec.decode(preferences[Keys.OPTICAL_PRESCRIPTION])) +
+            preferences[Keys.OPTICAL_PRESCRIPTION_HISTORY].orEmpty()
+                .lineSequence().mapNotNull(OpticalPrescriptionCodec::decode).toList()
+        val uris = prescriptions.mapNotNull { it.documentUri }.toSet()
+        context.contentResolver.persistedUriPermissions.filter { it.uri.toString() in uris }.forEach { grant ->
+            val flags = (if (grant.isReadPermission) Intent.FLAG_GRANT_READ_URI_PERMISSION else 0) or
+                (if (grant.isWritePermission) Intent.FLAG_GRANT_WRITE_URI_PERMISSION else 0)
+            try {
+                context.contentResolver.releasePersistableUriPermission(grant.uri, flags)
+            } catch (_: SecurityException) {
+                // A revoked grant is already unavailable; the saved data must still be erased.
+            }
         }
     }
 
@@ -488,7 +571,9 @@ class VisualProfileRepository(
     }
 
     suspend fun reset() {
+        LocalDocumentReader.clearAbandonedTemporaryCopies(context)
         context.vueConfortDataStore.edit { preferences ->
+            releasePrescriptionDocumentGrants(preferences)
             preferences.clear()
         }
     }
@@ -766,6 +851,8 @@ class VisualProfileRepository(
     }
 
     private object Keys {
+        val OPTICAL_PRESCRIPTION = stringPreferencesKey("optical_prescription_v1")
+        val OPTICAL_PRESCRIPTION_HISTORY = stringPreferencesKey("optical_prescription_history_v1")
         val PROFILE_ID = stringPreferencesKey("profile_id")
         val PROFILE_NAME = stringPreferencesKey("profile_name")
         val FONT_SIZE = floatPreferencesKey("font_size")

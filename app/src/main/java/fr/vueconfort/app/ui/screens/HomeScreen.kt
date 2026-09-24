@@ -2,10 +2,9 @@ package fr.vueconfort.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,14 +17,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import fr.vueconfort.app.R
 import fr.vueconfort.app.core.VueConfortCoreState
 import fr.vueconfort.app.magnifier.ScreenMagnifierService
@@ -44,201 +47,100 @@ fun HomeScreen(
     onCoreStatus: () -> Unit,
     onHelp: () -> Unit,
     onMagnifierSetup: () -> Unit,
+    onOpticalPrescription: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-
+    var showMore by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.SemiBold) },
+                actions = { TextButton(onClick = onHelp) { Text(stringResource(R.string.help)) } }
             )
         }
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            Modifier.fillMaxSize().padding(innerPadding).verticalScroll(rememberScrollState()).padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            Text(
-                text = stringResource(R.string.home_title),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Text("Votre lecture, à votre rythme", style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold)
+            Text("Retrouvez vos outils de lecture et un affichage qui vous ressemble.",
+                style = MaterialTheme.typography.bodyLarge)
 
-            Text(
-                text = stringResource(R.string.home_summary),
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            ProfileStatusCard(
-                profile = profile
-            )
-
-            Spacer(
-                modifier = Modifier.height(4.dp)
-            )
-
-            Button(
-                onClick = {
-                    if (
-                        VueConfortCoreState
-                            .isAccessibilityEnabled(context)
-                    ) {
-                        ScreenMagnifierService
-                            .handleExternalAction(
-                                ScreenMagnifierService
-                                    .ACTION_MAGNIFIER_ENABLE
-                            )
-                    } else {
-                        onMagnifierSetup()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    stringResource(
-                        R.string.home_magnifier_primary
-                    )
-                )
+            HomeSection(highlighted = true) {
+                Text("Un réglage qui vous convient", style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold)
+                Text("Comparez le texte et affinez sa taille, ses contrastes et ses espacements.")
+                Button(onClick = onCalibration, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    shape = RoundedCornerShape(16.dp)) { Text("Améliorer ma lecture") }
             }
 
-            Button(
-                onClick = onVisualAssessment,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(stringResource(R.string.visual_assessment))
+            HomeSection {
+                Text("Mon bilan visuel", style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold)
+                Text("Vous avez une ordonnance ou un compte rendu ? Importez une photo ou un PDF, vérifiez les valeurs, puis essayez un point de départ pour lire.")
+                OutlinedButton(onClick = onOpticalPrescription,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(16.dp)) {
+                    Text("Ajouter ou consulter mon bilan")
+                }
+                Text("Sans bilan, vous pouvez aussi régler votre confort de lecture.",
+                    style = MaterialTheme.typography.bodySmall)
             }
 
-            Button(
-                onClick = onCalibration,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    text = if (profile.calibrated) {
-                        stringResource(R.string.redo_calibration)
-                    } else {
-                        stringResource(R.string.start_calibration)
-                    }
-                )
+            Text("Au quotidien", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            HomeSection {
+                OutlinedButton(onClick = {
+                    if (VueConfortCoreState.isAccessibilityEnabled(context)) {
+                        ScreenMagnifierService.handleExternalAction(ScreenMagnifierService.ACTION_MAGNIFIER_ENABLE)
+                    } else onMagnifierSetup()
+                }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(16.dp)) {
+                    Text(stringResource(R.string.home_magnifier_primary))
+                }
+                OutlinedButton(onClick = onReading, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    shape = RoundedCornerShape(16.dp)) { Text(stringResource(R.string.optimized_reading)) }
+                Text("La loupe agrandit avec Android. Le lecteur applique vos réglages au texte disponible.",
+                    style = MaterialTheme.typography.bodySmall)
             }
 
-            OutlinedButton(
-                onClick = onQuestionnaire,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(stringResource(R.string.visual_questionnaire))
+            HomeSection {
+                Text(if (profile.calibrated) "Mon profil de lecture" else "Mon profil à affiner",
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text("Vos préférences de taille et d’espacement sont conservées.")
+                TextButton(onClick = onProfile) { Text("Voir mon profil") }
             }
 
-            OutlinedButton(
-                onClick = onReading,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(stringResource(R.string.optimized_reading))
+            TextButton(onClick = { showMore = !showMore }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                Text(if (showMore) "Masquer les autres outils" else "Autres outils et réglages")
             }
-
-            OutlinedButton(
-                onClick = onProfile,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(stringResource(R.string.my_profile))
+            if (showMore) {
+                HomeSection {
+                    HomeSecondaryAction(stringResource(R.string.visual_questionnaire), onQuestionnaire)
+                    HomeSecondaryAction(if (profile.calibrated) stringResource(R.string.redo_calibration)
+                        else stringResource(R.string.start_calibration), onCalibration)
+                    HomeSecondaryAction(stringResource(R.string.visual_assessment), onVisualAssessment)
+                    HomeSecondaryAction(stringResource(R.string.vueconfort_status), onCoreStatus)
+                    HomeSecondaryAction(stringResource(R.string.settings), onSettings)
+                }
             }
-
-            OutlinedButton(
-                onClick = onCoreStatus,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(stringResource(R.string.vueconfort_status))
-            }
-
-            OutlinedButton(onClick = onHelp, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
-                Text(stringResource(R.string.help))
-            }
-
-            OutlinedButton(
-                onClick = onSettings,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(stringResource(R.string.settings))
-            }
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            Text(
-                text = stringResource(R.string.medical_limits),
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Text("Vos réglages restent sur ce téléphone. VueConfort aide à lire sur écran et ne remplace pas des lunettes ni un bilan professionnel.",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-private fun ProfileStatusCard(
-    profile: VisualProfile
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = if (profile.calibrated) {
-                    stringResource(R.string.calibrated_profile)
-                } else {
-                    stringResource(R.string.default_profile)
-                },
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Text(
-                text = stringResource(R.string.text_size_format, profile.fontSizeSp.toInt()),
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-                text = stringResource(R.string.weight_format, profile.fontWeight),
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-                text = stringResource(R.string.line_spacing_format, profile.lineHeightMultiplier),
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            if (profile.calibrated) {
-                Text(
-                    text = stringResource(R.string.confidence_format, (profile.calibrationConfidence * 100f).toInt()),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
+private fun HomeSection(highlighted: Boolean = false, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = if (highlighted) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surfaceVariant)) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
     }
+}
+
+@Composable
+private fun HomeSecondaryAction(label: String, action: () -> Unit) {
+    TextButton(onClick = action, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(label) }
 }
