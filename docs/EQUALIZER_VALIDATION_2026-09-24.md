@@ -12,7 +12,7 @@ Les commits suivants ne portent que sur la documentation et l’analyse des mesu
 - 22 tests instrumentés fonctionnels réussis sur le S25 : import, stockage isolé, identité des pixels, commandes réelles et comparaison Original.
 - Tests PixelCopy : rendu neutre/désactivé/intensité nulle identique à la source ; Original conserve la géométrie et le zoom ; chaque contrôle raccordé modifie effectivement le rendu.
 - Recette par touches Android : sauvegarde des six réglages, arrêt complet, réouverture et stockage strictement identique ; annulation sans écriture ; neutralisation du brouillon distincte de sa sauvegarde ; suppression et absence de retour au redémarrage. Entrées préexistantes conservées.
-- Comparaison de captures : sur 676 992 pixels de l’aperçu, l’appui Original change 666 014 pixels ; au relâchement, zéro pixel diffère du traitement précédent. La preuve d’identité avec la source vient séparément des tests PixelCopy.
+- Comparaison de captures refaite sur l’APK final : sur 676 992 pixels de l’aperçu, l’appui Original change 666 020 pixels ; au relâchement, zéro pixel diffère du traitement précédent. La preuve d’identité avec la source vient séparément des tests PixelCopy.
 - Aucun bilan réel dans la recette manuelle : la conservation d’un bilan confirmé est testée avec des données synthétiques dans des fichiers privés isolés.
 - Loupe Lab historique : activation 1,5×, augmentation 2×, déplacement, retour 1,5×, arrêt. Sauvegarde privée restaurée, empreintes APK/données et liste des services d’accessibilité identiques à l’état initial. Pas de mesure comparative de fréquence de la loupe.
 
