@@ -54,105 +54,31 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var showMore by rememberSaveable { mutableStateOf(false) }
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.SemiBold) },
-                actions = { TextButton(onClick = onHelp) { Text(stringResource(R.string.help)) } }
-            )
+    ProductPage("VueConfort", null) {
+        Text("Votre confort visuel", style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold)
+        Text("Retrouvez vos outils, avec ou sans bilan visuel.")
+        ProductAction("Améliorer mon affichage", "home_configure", primary = true, action = onQuestionnaire)
+        ProductCard {
+            Text("Affiner mon confort", style = MaterialTheme.typography.titleLarge)
+            ProductAction("Égaliseur visuel", "eq_open", primary = true, action = onEqualizer)
+            ProductAction("Mon profil", "home_profile", action = onProfile)
+            ProductAction("Mon bilan visuel", "home_bilan", action = onOpticalPrescription)
         }
-    ) { innerPadding ->
-        Column(
-            Modifier.fillMaxSize().padding(innerPadding).verticalScroll(rememberScrollState()).padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
-        ) {
-            Text("Votre lecture, à votre rythme", style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold)
-            Text("Retrouvez vos outils de lecture et un affichage qui vous ressemble.",
-                style = MaterialTheme.typography.bodyLarge)
-
-            HomeSection(highlighted = true) {
-                Text("Votre égaliseur visuel", style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold)
-                Text("Regardez, réglez, comparez. Trouvez votre confort sur un texte ou une image, avec ou sans bilan.")
-                Button(onClick = onEqualizer, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("eq_open"),
-                    shape = RoundedCornerShape(16.dp)) { Text("Ouvrir l’égaliseur") }
-                TextButton(onClick = onEqualizer) { Text("Essayer immédiatement · sans correction connue") }
+        fr.vueconfort.app.orchestration.VisionStatusCard()
+        ProductCard {
+            Text("Sur mon téléphone", style = MaterialTheme.typography.titleLarge)
+            ProductAction("Aides de l’affichage", "native_open", action = onNativeVision)
+            ProductAction("Ouvrir la loupe", "home_magnifier") {
+                if (VueConfortCoreState.isAccessibilityEnabled(context)) {
+                    ScreenMagnifierService.handleExternalAction(ScreenMagnifierService.ACTION_MAGNIFIER_ENABLE)
+                } else onMagnifierSetup()
             }
-
-            fr.vueconfort.app.orchestration.VisionStatusCard()
-
-            HomeSection {
-                Text("Mon affichage", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                Text("Retrouvez les aides de votre téléphone et configurez les contours Samsung si disponibles.")
-                OutlinedButton(onClick = onNativeVision, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("native_open")) { Text("Configurer mon affichage") }
-            }
-
-            HomeSection {
-                Text("Mon bilan visuel", style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold)
-                Text("Vous avez une ordonnance ou un compte rendu ? Importez une photo ou un PDF, vérifiez les valeurs, puis essayez un point de départ pour lire.")
-                OutlinedButton(onClick = onOpticalPrescription,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(16.dp)) {
-                    Text("J’ai un bilan / je connais ma correction")
-                }
-                Text("Sans bilan, vous pouvez aussi régler votre confort de lecture.",
-                    style = MaterialTheme.typography.bodySmall)
-            }
-
-            Text("Au quotidien", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-            HomeSection {
-                OutlinedButton(onClick = {
-                    if (VueConfortCoreState.isAccessibilityEnabled(context)) {
-                        ScreenMagnifierService.handleExternalAction(ScreenMagnifierService.ACTION_MAGNIFIER_ENABLE)
-                    } else onMagnifierSetup()
-                }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(16.dp)) {
-                    Text(stringResource(R.string.home_magnifier_primary))
-                }
-                OutlinedButton(onClick = onReading, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                    shape = RoundedCornerShape(16.dp)) { Text(stringResource(R.string.optimized_reading)) }
-                Text("La loupe agrandit avec Android. Le lecteur applique vos réglages au texte disponible.",
-                    style = MaterialTheme.typography.bodySmall)
-            }
-
-            HomeSection {
-                Text("Profils du lecteur et de la loupe",
-                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text("Retrouvez les réglages de vos autres outils de lecture.")
-                TextButton(onClick = onProfile) { Text("Voir mon profil") }
-            }
-
-            TextButton(onClick = { showMore = !showMore }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                Text(if (showMore) "Masquer les autres outils" else "Autres outils et réglages")
-            }
-            if (showMore) {
-                HomeSection {
-                    HomeSecondaryAction(stringResource(R.string.visual_questionnaire), onQuestionnaire)
-                    HomeSecondaryAction(if (profile.calibrated) stringResource(R.string.redo_calibration)
-                        else stringResource(R.string.start_calibration), onCalibration)
-                    HomeSecondaryAction(stringResource(R.string.visual_assessment), onVisualAssessment)
-                    HomeSecondaryAction(stringResource(R.string.vueconfort_status), onCoreStatus)
-                    HomeSecondaryAction(stringResource(R.string.settings), onSettings)
-                }
-            }
-            Text("Vos réglages restent sur ce téléphone. VueConfort aide à lire sur écran et ne remplace pas des lunettes ni un bilan professionnel.",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            ProductAction("Lecteur confortable", "home_reading", action = onReading)
+            Text("L’égaliseur agit dans son aperçu. Les aides Android et Samsung ont la portée indiquée dans leurs réglages.",
+                style = MaterialTheme.typography.bodySmall)
         }
+        ProductAction("Réglages et autorisations", "home_settings", action = onSettings)
+        ProductAction("Aide", "home_help", action = onHelp)
     }
-}
-
-@Composable
-private fun HomeSection(highlighted: Boolean = false, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = if (highlighted) MaterialTheme.colorScheme.primaryContainer
-            else MaterialTheme.colorScheme.surfaceVariant)) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
-    }
-}
-
-@Composable
-private fun HomeSecondaryAction(label: String, action: () -> Unit) {
-    TextButton(onClick = action, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(label) }
 }

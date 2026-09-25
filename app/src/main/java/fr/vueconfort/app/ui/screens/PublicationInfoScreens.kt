@@ -29,7 +29,7 @@ import fr.vueconfort.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HelpScreen(onBack: () -> Unit) {
+fun HelpScreen(onBack: () -> Unit, onPermissions: (() -> Unit)? = null) {
     val context = LocalContext.current
     InfoScaffold(stringResource(R.string.help), onBack) {
         HelpSection(stringResource(R.string.help_getting_started), stringResource(R.string.help_getting_started_body))
@@ -46,7 +46,7 @@ fun HelpScreen(onBack: () -> Unit) {
         HelpSection(stringResource(R.string.issue_tile), stringResource(R.string.issue_tile_body))
         HelpSection(stringResource(R.string.issue_automation), stringResource(R.string.issue_automation_body))
         Button(
-            onClick = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
+            onClick = { onPermissions?.invoke() ?: context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
             modifier = Modifier.fillMaxWidth()
         ) { Text(stringResource(R.string.open_accessibility_settings)) }
         OutlinedButton(

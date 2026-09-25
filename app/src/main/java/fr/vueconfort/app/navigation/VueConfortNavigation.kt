@@ -5,6 +5,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -30,6 +31,13 @@ import fr.vueconfort.app.ui.screens.QuickReadingSetupScreen
 import fr.vueconfort.app.ui.screens.ReadingScreen
 import fr.vueconfort.app.ui.screens.SettingsScreen
 import fr.vueconfort.app.ui.screens.CoreStatusScreen
+import fr.vueconfort.app.ui.screens.ProductWelcomeScreen
+import fr.vueconfort.app.ui.screens.PersonalProfileScreen
+import fr.vueconfort.app.ui.screens.PermissionsScreen
+import fr.vueconfort.app.ui.screens.VisionEntry
+import fr.vueconfort.app.ui.screens.PrescriptionEntry
+import fr.vueconfort.app.ui.screens.VueConfortColors
+import fr.vueconfort.app.BuildConfig
 import fr.vueconfort.app.ui.screens.FirstLaunchScreen
 import fr.vueconfort.app.ui.screens.GuidedSetupScreen
 import fr.vueconfort.app.ui.screens.HelpScreen
@@ -69,19 +77,21 @@ fun VueConfortApp(
 
     val opticalPrescription by
         mainViewModel.opticalPrescription.collectAsStateWithLifecycle()
+    var prescriptionEntry by rememberSaveable { mutableStateOf(PrescriptionEntry.CHOOSE) }
     var prescriptionCalibrationBase by remember {
         mutableStateOf<fr.vueconfort.app.model.VisualProfile?>(null)
     }
 
     if (onboardingCompleted == null) {
-        MaterialTheme { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
+        MaterialTheme(colorScheme = VueConfortColors) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
         return
     }
 
-    MaterialTheme {
+    val initialRoute = remember { if (onboardingCompleted == true) AppRoute.Home.route else AppRoute.Welcome.route }
+    MaterialTheme(colorScheme = VueConfortColors) {
         NavHost(
             navController = navController,
-            startDestination = if (onboardingCompleted == true) AppRoute.Home.route else AppRoute.Welcome.route,
+            startDestination = initialRoute,
             modifier = modifier
         ) {
             composable(
@@ -93,7 +103,7 @@ fun VueConfortApp(
                     onEqualizer = { navController.navigate(AppRoute.Equalizer.route) },
                     onQuestionnaire = {
                         navController.navigate(
-                            AppRoute.QuickReadingSetup.route
+                            AppRoute.Welcome.route
                         )
                     },
                     onCalibration = {
@@ -126,22 +136,25 @@ fun VueConfortApp(
                         navController.navigate(AppRoute.Help.route)
                     },
                     onMagnifierSetup = {
-                        navController.navigate(AppRoute.Welcome.route)
+                        navController.navigate(AppRoute.Permissions.route)
                     },
                     onOpticalPrescription = {
+                        prescriptionEntry = PrescriptionEntry.CHOOSE
                         navController.navigate(AppRoute.OpticalPrescription.route)
                     }
                 )
             }
 
             composable(route = AppRoute.NativeVision.route) {
-                fr.vueconfort.app.nativevision.NativeVisionScreen(onBack = { navController.popBackStack() })
+                fr.vueconfort.app.nativevision.NativeVisionScreen(onBack = { navController.popBackStack() },
+                    onMagnifierPermission = { navController.navigate(AppRoute.Permissions.route) })
             }
 
             composable(route = AppRoute.Equalizer.route) {
                 EqualizerScreen(
                     onBack = { navController.popBackStack() },
-                    onBilan = { navController.navigate(AppRoute.OpticalPrescription.route) }
+                    onBilan = { prescriptionEntry = PrescriptionEntry.CHOOSE; navController.navigate(AppRoute.OpticalPrescription.route) },
+                    onNativeVision = { navController.navigate(AppRoute.NativeVision.route) }
                 )
             }
 
@@ -192,35 +205,30 @@ fun VueConfortApp(
                 )
             }
 
-            composable(
-                route = AppRoute.Calibration.route
-            ) {
-                val calibrationViewModel:
-                    CalibrationViewModel = viewModel()
-
+            composable(route = AppRoute.Calibration.route) {
+                val calibrationViewModel: CalibrationViewModel = viewModel()
+                var saving by remember { mutableStateOf(false) }
+                var error by remember { mutableStateOf<String?>(null) }
                 CalibrationScreen(
                     baseProfile = prescriptionCalibrationBase ?: profile,
                     viewModel = calibrationViewModel,
-                    onCalibrationCompleted = {
-                        calibratedProfile ->
-
-                        mainViewModel.saveProfile(
-                            calibratedProfile
-                        )
-
-                        prescriptionCalibrationBase = null
-                        calibrationViewModel.reset()
-
-                        navController.popBackStack(
-                            route = AppRoute.Home.route,
-                            inclusive = false
-                        )
+                    saving = saving, operationError = error,
+                    onCalibrationCompleted = { calibrated ->
+                        if (!saving) {
+                            saving = true; error = null
+                            mainViewModel.saveCalibratedProfile(calibrated) { result ->
+                                saving = false
+                                if (result.isSuccess) {
+                                    prescriptionCalibrationBase = null
+                                    navController.navigate(AppRoute.Equalizer.route) {
+                                        popUpTo(AppRoute.Calibration.route) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                } else error = "Vos choix n’ont pas pu être enregistrés. Réessayez avant de quitter."
+                            }
+                        }
                     },
-                    onBack = {
-                        prescriptionCalibrationBase = null
-                        calibrationViewModel.reset()
-                        navController.popBackStack()
-                    }
+                    onBack = { if (!saving) { prescriptionCalibrationBase = null; navController.popBackStack() } }
                 )
             }
 
@@ -268,7 +276,7 @@ fun VueConfortApp(
             }
 
             composable(
-                route = AppRoute.Profile.route
+                route = AppRoute.ToolProfiles.route
             ) {
                 ProfileScreen(
                     profiles = assistProfiles,
@@ -288,10 +296,26 @@ fun VueConfortApp(
                 )
             }
 
+            composable(route = AppRoute.Profile.route) {
+                PersonalProfileScreen(
+                    onEqualizer = { navController.navigate(AppRoute.Equalizer.route) },
+                    onBilan = { prescriptionEntry = PrescriptionEntry.CHOOSE; navController.navigate(AppRoute.OpticalPrescription.route) },
+                    onCalibration = { navController.navigate(AppRoute.Calibration.route) },
+                    onNativeVision = { navController.navigate(AppRoute.NativeVision.route) },
+                    onTools = { navController.navigate(AppRoute.ToolProfiles.route) },
+                    onHistory = { navController.navigate(AppRoute.AssessmentHistory.route) },
+                    onExercises = { navController.navigate(AppRoute.VisualAssessment.route) },
+                    onBack = { navController.popBackStack() })
+            }
+            composable(route = AppRoute.Permissions.route) { PermissionsScreen { navController.popBackStack() } }
+
             composable(
                 route = AppRoute.Settings.route
             ) {
+                var resetting by remember { mutableStateOf(false) }
+                var resetError by remember { mutableStateOf<String?>(null) }
                 SettingsScreen(
+                    resetting = resetting, operationError = resetError,
                     profiles = assistProfiles,
                     rules = automationRules,
                     status = automationStatus,
@@ -301,17 +325,23 @@ fun VueConfortApp(
                     onHelp = { navController.navigate(AppRoute.Help.route) },
                     onAbout = { navController.navigate(AppRoute.About.route) },
                     onPrivacy = { navController.navigate(AppRoute.Privacy.route) },
+                    onPermissions = { navController.navigate(AppRoute.Permissions.route) },
+                    onNativeVision = { navController.navigate(AppRoute.NativeVision.route) },
                     onRedoSetup = {
-                        mainViewModel.setOnboardingCompleted(false)
                         navController.navigate(AppRoute.Welcome.route)
                     },
                     onResetProfiles = mainViewModel::resetAssistProfiles,
                     onClearHistory = mainViewModel::clearAssessmentHistory,
                     onClearRules = mainViewModel::clearAutomationRules,
                     onResetAll = {
-                        mainViewModel.resetAll()
-                        navController.navigate(AppRoute.Welcome.route) {
-                            popUpTo(AppRoute.Home.route) { inclusive = true }
+                        if (!resetting) {
+                            resetting = true; resetError = null
+                            mainViewModel.resetAll { result ->
+                                resetting = false
+                                if (result.isSuccess) navController.navigate(AppRoute.Welcome.route) {
+                                    popUpTo(navController.graph.id) { inclusive = false }
+                                } else resetError = "La restauration ou la suppression n’a pas abouti. Vos données sont conservées ; réessayez."
+                            }
                         }
                     },
                     onBack = {
@@ -367,7 +397,8 @@ fun VueConfortApp(
                     },
                     onBack = { if (!saving) navController.popBackStack() },
                     saving = saving,
-                    operationError = operationError
+                    operationError = operationError,
+                    initialEntry = prescriptionEntry
                 )
             }
 
@@ -383,23 +414,35 @@ fun VueConfortApp(
             }
 
             composable(route = AppRoute.Welcome.route) {
-                FirstLaunchScreen(
-                    onReady = {
-                        mainViewModel.setOnboardingCompleted(true)
-
-                        navController.navigate(AppRoute.Home.route) {
-                            popUpTo(AppRoute.Welcome.route) {
-                                inclusive = true
+                var busy by remember { mutableStateOf(false) }
+                var error by remember { mutableStateOf<String?>(null) }
+                ProductWelcomeScreen(busy = busy, error = error,
+                    onChoose = { entry ->
+                        if (!busy) {
+                            busy = true; error = null
+                            mainViewModel.completeInitialSetup { result ->
+                                busy = false
+                                if (result.isSuccess) {
+                                    prescriptionEntry = when (entry) {
+                                        VisionEntry.KNOWN -> PrescriptionEntry.MANUAL
+                                        VisionEntry.DOCUMENT -> PrescriptionEntry.DOCUMENT
+                                        else -> PrescriptionEntry.CHOOSE
+                                    }
+                                    navController.navigate(AppRoute.Home.route) {
+                                        popUpTo(navController.graph.id) { inclusive = false }
+                                        launchSingleTop = true
+                                    }
+                                    navController.navigate(when (entry) {
+                                        VisionEntry.TRY -> AppRoute.Equalizer.route
+                                        VisionEntry.UNKNOWN -> AppRoute.Calibration.route
+                                        else -> AppRoute.OpticalPrescription.route
+                                    })
+                                } else error = "La préparation du profil a échoué. Vous pouvez réessayer."
                             }
                         }
                     },
-                    onAdvancedSetup = {
-                        navController.navigate(AppRoute.Setup.route)
-                    },
-                    onPrivacy = {
-                        navController.navigate(AppRoute.Privacy.route)
-                    }
-                )
+                    onPrivacy = { navController.navigate(AppRoute.Privacy.route) },
+                    onBack = if (onboardingCompleted == true) ({ navController.popBackStack(); Unit }) else null)
             }
 
             composable(route = AppRoute.Setup.route) {
@@ -416,7 +459,8 @@ fun VueConfortApp(
                 )
             }
 
-            composable(route = AppRoute.Help.route) { HelpScreen { navController.popBackStack() } }
+            composable(route = AppRoute.Help.route) { HelpScreen(onBack = { navController.popBackStack() },
+                onPermissions = { navController.navigate(AppRoute.Permissions.route) }) }
             composable(route = AppRoute.Privacy.route) { PrivacyScreen { navController.popBackStack() } }
             composable(route = AppRoute.About.route) {
                 AboutScreen(

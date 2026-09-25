@@ -1,5 +1,6 @@
 package fr.vueconfort.app.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,9 +53,12 @@ fun CalibrationScreen(
     viewModel: CalibrationViewModel,
     onCalibrationCompleted: (VisualProfile) -> Unit,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    saving: Boolean = false,
+    operationError: String? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    BackHandler(enabled = saving) { }
 
     LaunchedEffect(baseProfile.id) {
         if (!uiState.started) {
@@ -73,11 +77,11 @@ fun CalibrationScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Calibration visuelle")
+                    Text("Ajustement guidé")
                 },
                 navigationIcon = {
                     OutlinedButton(
-                        onClick = onBack,
+                        onClick = onBack, enabled = !saving,
                         modifier = Modifier.padding(start = 8.dp)
                     ) {
                         Text("Retour")
@@ -96,16 +100,13 @@ fun CalibrationScreen(
             }
 
             uiState.completed -> {
-                CalibrationCompletedContent(
-                    profile = uiState.currentProfile,
-                    confidence = uiState.session.confidenceScore,
-                    onRestart = {
-                        viewModel.restartFrom(baseProfile)
-                    },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                )
+                Column(Modifier.fillMaxSize().padding(innerPadding).padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(if (saving) "Enregistrement de vos choix…" else "Vos choix de lecture sont prêts")
+                    if (saving) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    operationError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    if (!saving) Button(onClick = { onCalibrationCompleted(uiState.currentProfile) }) { Text("Enregistrer et ouvrir l’Égaliseur") }
+                }
+
             }
 
             else -> {

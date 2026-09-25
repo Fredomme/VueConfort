@@ -22,7 +22,8 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
-fun NativeVisionScreen(onBack: () -> Unit, model: NativeVisionViewModel = viewModel()) {
+fun NativeVisionScreen(onBack: () -> Unit, model: NativeVisionViewModel = viewModel(),
+                       onMagnifierPermission: (() -> Unit)? = null) {
     val state by model.state.collectAsStateWithLifecycle()
     NativeResumeObserver(model)
     Scaffold(modifier = Modifier.semantics { testTagsAsResourceId = true }, topBar = {
@@ -55,7 +56,10 @@ fun NativeVisionScreen(onBack: () -> Unit, model: NativeVisionViewModel = viewMo
                     }
                     ResultText(NativeVisionCapability.MAGNIFICATION, state)
                     Text("Pour agrandir l’écran, activez volontairement le service de la loupe dans Android. Ce service utilise aussi le nom de l’application affichée pour vos règles et, uniquement avec le bouton Lire, son texte accessible. Ces informations restent sur le téléphone ; le texte lu n’est pas enregistré.", style = MaterialTheme.typography.bodySmall)
-                    ConfigureButton(NativeVisionCapability.MAGNIFICATION, model, "Autoriser ou configurer la loupe")
+                    if (onMagnifierPermission != null) OutlinedButton(onClick = onMagnifierPermission,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("native_configure_magnification")) {
+                        Text("Autoriser ou configurer la loupe")
+                    } else ConfigureButton(NativeVisionCapability.MAGNIFICATION, model, "Autoriser ou configurer la loupe")
                 }
                 NativeCard("Atténuation supplémentaire", "Réduire la luminosité des couleurs affichées avec l’aide native du téléphone.") {
                     val cap = NativeVisionCapability.EXTRA_DIM

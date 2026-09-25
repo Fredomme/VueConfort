@@ -6,6 +6,9 @@ sealed class AppRoute(
     data object Home :
         AppRoute("home")
 
+    data object Permissions : AppRoute("permissions")
+    data object ToolProfiles : AppRoute("tool_profiles")
+
     data object NativeVision : AppRoute("native_vision")
 
     data object Equalizer : AppRoute("equalizer")

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -72,10 +73,24 @@ fun SettingsScreen(
     onClearHistory: () -> Unit,
     onClearRules: () -> Unit,
     onResetAll: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onPermissions: () -> Unit = {},
+    onNativeVision: () -> Unit = {},
+    resetting: Boolean = false,
+    operationError: String? = null
 ) {
+    BackHandler(enabled = resetting) { }
+    if (resetting) {
+        ProductPage("Réinitialisation", null) {
+            Text("Restauration des réglages du téléphone et suppression des données locales…")
+            androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth())
+        }
+        return
+    }
     val context = LocalContext.current
-    val apps = remember {
+    var showAutomation by remember { mutableStateOf(false) }
+    val apps = remember(showAutomation) {
+        if (!showAutomation) return@remember emptyList<LaunchableApp>()
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         context.packageManager.queryIntentActivities(intent, 0)
             .map {
@@ -118,7 +133,7 @@ fun SettingsScreen(
     androidx.compose.material3.Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Automatisation") },
+                title = { Text("Réglages") },
                 navigationIcon = {
                     OutlinedButton(onClick = onBack, modifier = Modifier.padding(start = 8.dp)) {
                         Text("Retour")
@@ -132,10 +147,23 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
+                ProductCard {
+                    Text("Mon téléphone", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                    ProductAction("Autorisations", "settings_permissions", action = onPermissions)
+                    ProductAction("Aides de l’affichage", "settings_native", action = onNativeVision)
+                    Text("Aucun accès système n’est nécessaire pour utiliser l’Égaliseur ou importer un bilan.")
+                }
+                operationError?.let { Text(it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
+                if (resetting) Text("Restauration et suppression en cours…")
+                ProductAction(if (showAutomation) "Masquer les automatismes" else "Profils automatiques du lecteur et de la loupe",
+                    "settings_automation") { showAutomation = !showAutomation }
+            }
+            if (showAutomation) {
+            item {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Profil appliqué : ${profiles.firstOrNull { it.id == status.profileId }?.name ?: "Standard"}")
-                        Text("${status.source}${status.reason.takeIf { it.isNotBlank() }?.let { " · $it" } ?: ""}")
+                        Text(status.reason.ifBlank { "Vos règles de lecture et de loupe sont enregistrées sur ce téléphone." })
                         if (status.lastAppliedMillis > 0) {
                             Text("Dernière application : ${DateFormat.getDateTimeInstance().format(Date(status.lastAppliedMillis))}")
                         }
@@ -241,9 +269,10 @@ fun SettingsScreen(
             items(rules, key = { it.id }) { rule ->
                 RuleCard(rule, profiles, onSaveRule, onDeleteRule)
             }
+            }
             item {
                 Button(
-                    onClick = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
+                    onClick = onPermissions,
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("Ouvrir les réglages d’accessibilité") }
             }
@@ -265,7 +294,7 @@ fun SettingsScreen(
                         ResetButton(stringResource(R.string.reset_profiles)) { pendingReset = resetProfilesConfirmation to onResetProfiles }
                         ResetButton(stringResource(R.string.delete_history)) { pendingReset = deleteHistoryConfirmation to onClearHistory }
                         ResetButton(stringResource(R.string.delete_rules)) { pendingReset = deleteRulesConfirmation to onClearRules }
-                        ResetButton(stringResource(R.string.reset_all)) { pendingReset = resetAllConfirmation to onResetAll }
+                        if (!resetting) ResetButton(stringResource(R.string.reset_all)) { pendingReset = resetAllConfirmation to onResetAll }
                     }
                 }
             }

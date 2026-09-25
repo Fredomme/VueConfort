@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.*
 import java.util.UUID
 
 /** A read-only aggregate. Existing repositories remain the only owners of user data. */
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class VisionStatusViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = VisualProfileRepository(application)
     private val sources = combine(repository.equalizerProfile, repository.opticalPrescription,
@@ -31,11 +32,17 @@ class VisionStatusViewModel(application: Application) : AndroidViewModel(applica
         VisionProfileSnapshot(equalizer ?: EqualizerProfile(), prescription,
             visualProfile = visual, declaredUserContext = context)
     }
-    val snapshot = combine(sources, repository.visualAssessments, repository.standardizedAssessments) { profile, comfort, standard ->
+    private val refresh = MutableStateFlow(0)
+    private val loadError = MutableStateFlow<String?>(null)
+    val error = loadError.asStateFlow()
+    fun retry() { refresh.value++ }
+    val snapshot = refresh.flatMapLatest { combine(sources, repository.visualAssessments, repository.standardizedAssessments) { profile, comfort, standard ->
         profile.withCalibration(VisionCalibrationSnapshot(
             comfortAssessment = comfort.maxByOrNull { it.createdAtMillis },
             standardizedAssessment = standard.maxByOrNull { it.createdAtMillis }))
-    }.catch { emit(VisionProfileSnapshot()) }
+    }.map<VisionProfileSnapshot, VisionProfileSnapshot?> { it }
+        .onStart { loadError.value = null }
+        .catch { loadError.value = "Votre profil n’a pas pu être lu. Vos données sont conservées."; emit(null) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 }
 
@@ -62,6 +69,7 @@ private fun currentCapabilities(): NativeVisionCapabilities? {
 @Composable
 fun VisionStatusCard(model: VisionStatusViewModel = viewModel()) {
     val source by model.snapshot.collectAsStateWithLifecycle()
+    val error by model.error.collectAsStateWithLifecycle()
     val capabilities = currentCapabilities()
     val app = LocalContext.current
     val session = remember { UUID.randomUUID().toString() }
@@ -70,15 +78,31 @@ fun VisionStatusCard(model: VisionStatusViewModel = viewModel()) {
         if (snapshot == null || capabilities == null) null else
             VisionRuntime.observe(app, VisionRuntime.plan(snapshot, capabilities, session))
     }
+    val loupeActive = remember(capabilities) { AndroidNativeVisionAdapter().readMagnificationState()?.enabled == true }
+    val opticalState = remember(snapshot, capabilities) {
+        if (snapshot == null || capabilities == null) null else {
+            val context = VisionExecutionContext(session, capabilities.observedAtMillis, capabilities.observedAtMillis,
+                setOf(VisionTransport.INTERNAL_PREVIEW), capabilities)
+            VisionRuntime.orchestrator().plan(snapshot.profileId, snapshot.sourceRevision, context,
+                listOf(snapshot.opticalReadinessRequest())).transformations.singleOrNull()
+        }
+    }
     Card(Modifier.fillMaxWidth().testTag("vision_status")) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(if (observed?.anyActive == true) "VueConfort · aide active" else "VueConfort · vos aides visuelles",
+            Text(if (observed?.anyActive == true || loupeActive) "VueConfort · aide active" else "VueConfort · vos aides visuelles",
                 style = MaterialTheme.typography.titleMedium)
-            if (observed == null) Text("Vérification des aides disponibles…")
-            else if (observed.transformations.isEmpty()) Text("Choisissez vos réglages, avec ou sans bilan visuel.")
+            if (error != null) {
+                Text(error!!, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = model::retry) { Text("Réessayer") }
+            } else if (observed == null) Text("Vérification des aides disponibles…")
+            else if (observed.transformations.isEmpty()) Text("Aucune aide du téléphone n’est activée par ce profil.")
             else observed.transformations.forEach { item -> Text(visionEffectSummary(item),
                 style = MaterialTheme.typography.bodyMedium) }
-            Text("Égaliseur : disponible dans son aperçu.\nCorrection avancée : pas encore disponible ici.",
+            if (loupeActive && observed?.transformations?.none { it.active &&
+                    (it.planned.request.payload as? EnginePayload.Native)?.capability == NativeVisionCapability.MAGNIFICATION } != false)
+                Text("Loupe Android : active, état vérifié")
+            Text("Égaliseur : disponible dans son aperçu.", style = MaterialTheme.typography.bodySmall)
+            if (opticalState != null) Text("Correction avancée : indisponible avec les informations actuelles.",
                 style = MaterialTheme.typography.bodySmall)
         }
     }
