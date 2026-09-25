@@ -89,6 +89,7 @@ fun VueConfortApp(
             ) {
                 HomeScreen(
                     profile = profile,
+                    onNativeVision = { navController.navigate(AppRoute.NativeVision.route) },
                     onEqualizer = { navController.navigate(AppRoute.Equalizer.route) },
                     onQuestionnaire = {
                         navController.navigate(
@@ -131,6 +132,10 @@ fun VueConfortApp(
                         navController.navigate(AppRoute.OpticalPrescription.route)
                     }
                 )
+            }
+
+            composable(route = AppRoute.NativeVision.route) {
+                fr.vueconfort.app.nativevision.NativeVisionScreen(onBack = { navController.popBackStack() })
             }
 
             composable(route = AppRoute.Equalizer.route) {

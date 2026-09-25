@@ -50,6 +50,7 @@ fun HomeScreen(
     onHelp: () -> Unit,
     onMagnifierSetup: () -> Unit,
     onOpticalPrescription: () -> Unit,
+    onNativeVision: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -79,6 +80,12 @@ fun HomeScreen(
                 Button(onClick = onEqualizer, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("eq_open"),
                     shape = RoundedCornerShape(16.dp)) { Text("Ouvrir l’égaliseur") }
                 TextButton(onClick = onEqualizer) { Text("Essayer immédiatement · sans correction connue") }
+            }
+
+            HomeSection {
+                Text("Mon affichage", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                Text("Retrouvez les aides de votre téléphone et configurez les contours Samsung si disponibles.")
+                OutlinedButton(onClick = onNativeVision, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("native_open")) { Text("Configurer mon affichage") }
             }
 
             HomeSection {

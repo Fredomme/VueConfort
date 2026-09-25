@@ -6,6 +6,8 @@ sealed class AppRoute(
     data object Home :
         AppRoute("home")
 
+    data object NativeVision : AppRoute("native_vision")
+
     data object Equalizer : AppRoute("equalizer")
 
     data object QuickReadingSetup :

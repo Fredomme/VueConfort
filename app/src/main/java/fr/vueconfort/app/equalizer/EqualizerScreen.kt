@@ -173,6 +173,7 @@ fun EqualizerScreen(onBack: () -> Unit, onBilan: () -> Unit,
                                 EqualizerControl("Intensité", percent(preferences.intensity), preferences.intensity, 0f..1f,
                                     "intensity", Modifier.weight(1f), supported && !state.busy) { command("intensity"); viewModel.updatePreferences { p -> p.copy(intensity = it) } }
                             }
+                            fr.vueconfort.app.nativevision.NativeEqualizerControls()
                         }
                     }
                 }

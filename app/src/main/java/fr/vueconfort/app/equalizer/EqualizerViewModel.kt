@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import fr.vueconfort.app.data.VisualProfileRepository
 import fr.vueconfort.app.model.OpticalPrescription
+import fr.vueconfort.app.nativevision.NativeVisionController
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -155,7 +156,7 @@ class EqualizerViewModel(
     }
 
     fun deleteProfile(): Job? = perform("Impossible de supprimer le profil. Réessaie dans un instant.") {
-        repository.deleteEqualizerProfile()
+        NativeVisionController.get(getApplication()).deletePersonalProfile()
         val current = _uiState.value
         publish(current.copy(
                 draft = EqualizerProfile(revision = current.draft.revision + 1, confirmedBilan = ConfirmedBilanReference.from(current.confirmedPrescription)),
