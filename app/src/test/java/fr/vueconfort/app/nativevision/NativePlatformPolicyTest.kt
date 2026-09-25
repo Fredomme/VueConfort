@@ -88,4 +88,102 @@ class NativePlatformPolicyTest {
         assertFalse(baseline.copy(scale = 9f).restorable)
         assertNull(baseline.copy(scale = 9f).asValue())
     }
+
+    private val inactiveWithoutViewport = NativeMagnificationSnapshot(
+        enabled = false, scale = 1f, centerX = null, centerY = null,
+        mode = NativeMagnificationMode.WINDOW, activationExact = true,
+    )
+
+    @Test fun exactInactiveStateWithoutViewportIsRestorableWithoutInventingACenter() {
+        assertTrue(inactiveWithoutViewport.restorable)
+        assertEquals(NativeVisionValue.Magnification(false, 1f, null, null, NativeMagnificationMode.WINDOW),
+            inactiveWithoutViewport.asValue())
+        assertFalse(inactiveWithoutViewport.copy(enabled = true).restorable)
+        assertFalse(inactiveWithoutViewport.copy(activationExact = false).restorable)
+    }
+
+    @Test fun partialOrInvalidInactiveGeometryRemainsUnrestorable() {
+        assertFalse(inactiveWithoutViewport.copy(centerX = 20f).restorable)
+        assertFalse(inactiveWithoutViewport.copy(centerY = 20f).restorable)
+        assertFalse(inactiveWithoutViewport.copy(centerX = Float.NaN, centerY = Float.NaN).restorable)
+        assertFalse(inactiveWithoutViewport.copy(scale = null).restorable)
+        assertFalse(inactiveWithoutViewport.copy(mode = null).restorable)
+    }
+
+    @Test fun inactiveMatchingKeepsModeAndScaleExactWithoutFabricatingRawCoordinates() {
+        assertTrue(inactiveWithoutViewport.matches(inactiveWithoutViewport.copy()))
+        val inactiveWithRetainedCoordinates = inactiveWithoutViewport.copy(centerX = 20f, centerY = 30f)
+        assertTrue(inactiveWithoutViewport.matches(inactiveWithRetainedCoordinates))
+        assertTrue(inactiveWithRetainedCoordinates.matches(inactiveWithoutViewport))
+        assertNotEquals(inactiveWithoutViewport, inactiveWithRetainedCoordinates)
+        assertTrue(inactiveWithoutViewport.inactiveCenterUnobservable)
+        assertNull(inactiveWithoutViewport.centerX)
+        assertNull(inactiveWithoutViewport.centerY)
+        assertFalse(inactiveWithoutViewport.matches(inactiveWithoutViewport.copy(scale = 1.0001f)))
+        assertFalse(inactiveWithoutViewport.matches(inactiveWithoutViewport.copy(mode = NativeMagnificationMode.FULLSCREEN)))
+        assertFalse(inactiveWithoutViewport.matches(inactiveWithoutViewport.copy(enabled = true)))
+    }
+
+    @Test fun firstActivationUsesOnlyAProvidedPublicViewportCenter() {
+        val request = NativeVisionValue.Magnification(true, 1.5f, mode = NativeMagnificationMode.WINDOW)
+        val target = inactiveWithoutViewport.targetFor(request, viewportCenter = 540f to 1200f)!!
+        assertEquals(540f, target.centerX!!, 0f)
+        assertEquals(1200f, target.centerY!!, 0f)
+        assertTrue(target.enabled && target.restorable)
+        assertEquals(1.5f, target.scale!!, 0f)
+        assertNull(inactiveWithoutViewport.targetFor(request))
+        assertNull(inactiveWithoutViewport.targetFor(request, Float.NaN to 10f))
+        assertNull(inactiveWithoutViewport.targetFor(request, -1f to 10f))
+    }
+
+    @Test fun explicitCenterAndAnExistingViewportTakePriorityOverFallbackGeometry() {
+        val noCenter = NativeVisionValue.Magnification(true, 1.5f, mode = NativeMagnificationMode.WINDOW)
+        val reused = baseline.targetFor(noCenter, 1f to 2f)!!
+        assertEquals(baseline.centerX, reused.centerX)
+        assertEquals(baseline.centerY, reused.centerY)
+        val explicit = baseline.targetFor(noCenter.copy(centerX = 100f, centerY = 200f), 1f to 2f)!!
+        assertEquals(100f, explicit.centerX!!, 0f)
+        assertEquals(200f, explicit.centerY!!, 0f)
+    }
+
+    @Test fun inactiveTargetNeverAddsAWindowCenterFromFallback() {
+        val target = inactiveWithoutViewport.targetFor(NativeVisionValue.Magnification(false, 1f,
+            mode = NativeMagnificationMode.WINDOW), 540f to 1200f)!!
+        assertEquals(inactiveWithoutViewport, target)
+        assertNull(target.centerX)
+        assertNull(target.centerY)
+    }
+
+    @Test fun journalCodecRoundTripsExplicitNullsAndPreviouslySupportedActiveGeometry() {
+        val inactiveFields = NativeMagnificationSnapshotCodec.encode(inactiveWithoutViewport)
+        assertTrue(inactiveFields.containsKey("centerX") && inactiveFields.containsKey("centerY"))
+        assertNull(inactiveFields.getValue("centerX"))
+        assertNull(inactiveFields.getValue("centerY"))
+        assertEquals(inactiveWithoutViewport, NativeMagnificationSnapshotCodec.decode(inactiveFields))
+        assertEquals(baseline, NativeMagnificationSnapshotCodec.decode(NativeMagnificationSnapshotCodec.encode(baseline)))
+        // JSONObject returns Number implementations; the codec accepts exact numeric JSON values.
+        assertEquals(inactiveWithoutViewport, NativeMagnificationSnapshotCodec.decode(inactiveFields + ("scale" to 1.0)))
+    }
+
+    @Test fun journalCodecDoesNotTurnMissingFieldsOrAnActiveUnknownCenterIntoAnInactiveState() {
+        val fields = NativeMagnificationSnapshotCodec.encode(inactiveWithoutViewport)
+        assertTrue(runCatching { NativeMagnificationSnapshotCodec.decode(fields - "centerX") }.isFailure)
+        assertTrue(runCatching { NativeMagnificationSnapshotCodec.decode(fields + ("enabled" to true)) }.isFailure)
+        assertTrue(runCatching { NativeMagnificationSnapshotCodec.decode(fields + ("centerX" to 20f)) }.isFailure)
+        assertTrue(runCatching { NativeMagnificationSnapshotCodec.encode(inactiveWithoutViewport.copy(enabled = true)) }.isFailure)
+    }
+
+    @Test fun switchingOffCanLoseViewportWhileSwitchingBackOnStillRequiresAndRestoresTheFullCenter() {
+        val originalFields = NativeMagnificationSnapshotCodec.encode(baseline)
+        val offTarget = baseline.targetFor(NativeVisionValue.Magnification(false, 1f,
+            mode = NativeMagnificationMode.WINDOW))!!
+        assertTrue(offTarget.matches(inactiveWithoutViewport))
+        assertTrue(inactiveWithoutViewport.inactiveCenterUnobservable)
+        assertEquals(baseline, NativeMagnificationSnapshotCodec.decode(originalFields))
+        val onTarget = inactiveWithoutViewport.targetFor(baseline.asValue()!!)!!
+        assertEquals(baseline, onTarget)
+        assertFalse(onTarget.matches(onTarget.copy(centerX = null, centerY = null)))
+        assertFalse(offTarget.matches(inactiveWithoutViewport.copy(centerX = 20f)))
+        assertFalse(offTarget.matches(inactiveWithoutViewport.copy(scale = 1.0001f)))
+    }
 }

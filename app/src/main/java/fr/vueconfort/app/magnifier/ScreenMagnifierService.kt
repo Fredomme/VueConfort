@@ -597,11 +597,14 @@ class ScreenMagnifierService : AccessibilityService() {
 
     private fun setNativeVisionMagnification(state: NativeMagnificationSnapshot): Boolean {
         if (releasing || !state.restorable || Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return false
-        val config = MagnificationConfig.Builder()
+        val builder = MagnificationConfig.Builder()
             .setMode(if (state.mode == NativeMagnificationMode.WINDOW)
                 MagnificationConfig.MAGNIFICATION_MODE_WINDOW else MagnificationConfig.MAGNIFICATION_MODE_FULLSCREEN)
-            .setScale(state.scale!!).setCenterX(state.centerX!!).setCenterY(state.centerY!!)
-            .setActivated(state.enabled).build()
+            .setScale(state.scale!!).setActivated(state.enabled)
+        // An inactive controller can report no viewport. Do not invent or force coordinates on rollback.
+        state.centerX?.let { builder.setCenterX(it) }
+        state.centerY?.let { builder.setCenterY(it) }
+        val config = builder.build()
         // No animation: the adapter checks the controller state before claiming application.
         val accepted = magnificationController.setMagnificationConfig(config, false)
         if (accepted) {
@@ -1139,6 +1142,14 @@ class ScreenMagnifierService : AccessibilityService() {
 
         fun nativeVisionMagnificationSnapshot(): NativeMagnificationSnapshot? =
             instance?.readNativeVisionMagnification()
+
+        /** Screen geometry from the same public window-bounds helper as the existing loupe. */
+        fun nativeVisionViewportCenter(): Pair<Float, Float>? = instance?.takeUnless { it.releasing }?.let { service ->
+            runCatching {
+                val (width, height) = service.windowBounds()
+                if (width > 0 && height > 0) width / 2f to height / 2f else null
+            }.getOrNull()
+        }
 
         fun applyNativeVisionMagnification(state: NativeMagnificationSnapshot): Boolean =
             instance?.setNativeVisionMagnification(state) ?: false

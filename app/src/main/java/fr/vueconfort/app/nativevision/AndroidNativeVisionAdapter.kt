@@ -17,13 +17,35 @@ data class NativeMagnificationSnapshot(
 ) {
     val restorable: Boolean get() = activationExact && mode != null &&
         scale != null && scale.isFinite() && scale in 1f..8f &&
-        centerX != null && centerX.isFinite() && centerX >= 0f &&
-        centerY != null && centerY.isFinite() && centerY >= 0f
+        ((!enabled && centerX == null && centerY == null) ||
+            (centerX != null && centerX.isFinite() && centerX >= 0f &&
+                centerY != null && centerY.isFinite() && centerY >= 0f))
 
-    fun matches(other: NativeMagnificationSnapshot): Boolean =
-        enabled == other.enabled && mode == other.mode && activationExact == other.activationExact &&
-            close(scale, other.scale, 0.001f) && close(centerX, other.centerX, 1f) &&
-            close(centerY, other.centerY, 1f)
+    val inactiveCenterUnobservable: Boolean get() = !enabled && centerX == null && centerY == null
+
+    fun matches(other: NativeMagnificationSnapshot): Boolean {
+        if (!restorable || !other.restorable || enabled != other.enabled || mode != other.mode ||
+            activationExact != other.activationExact) return false
+        if (enabled) return close(scale, other.scale, 0.001f) && close(centerX, other.centerX, 1f) && close(centerY, other.centerY, 1f)
+        // Android may drop a viewport on OFF. Confirm the exact inactive state without inventing
+        // a centre, but keep the raw snapshots unchanged in the journal for a later ON restoration.
+        return scale == other.scale && (inactiveCenterUnobservable || other.inactiveCenterUnobservable ||
+            (close(centerX, other.centerX, 1f) && close(centerY, other.centerY, 1f)))
+    }
+
+    /** OFF may have no viewport. Only a requested ON can introduce an observed public viewport centre. */
+    fun targetFor(requested: NativeVisionValue.Magnification,
+                  viewportCenter: Pair<Float, Float>? = null): NativeMagnificationSnapshot? {
+        if (!restorable || !requested.isValidFor(NativeVisionCapability.MAGNIFICATION)) return null
+        val center = when {
+            requested.centerX != null && requested.centerY != null -> requested.centerX to requested.centerY
+            centerX != null && centerY != null -> centerX to centerY
+            requested.enabled -> viewportCenter
+            else -> null
+        }
+        return copy(enabled = requested.enabled, scale = requested.scale, mode = requested.mode,
+            centerX = center?.first, centerY = center?.second).takeIf { it.restorable }
+    }
 
     fun asValue(): NativeVisionValue.Magnification? =
         if (restorable && scale!! in 1f..8f) NativeVisionValue.Magnification(
@@ -41,6 +63,11 @@ class AndroidNativeVisionAdapter {
 
     fun isControllerConnected(): Boolean = ScreenMagnifierService.nativeVisionControllerConnected()
 
+    internal fun prepareMagnificationTarget(requested: NativeVisionValue.Magnification,
+                                            before: NativeMagnificationSnapshot): NativeMagnificationSnapshot? =
+        before.targetFor(requested, if (requested.enabled && requested.centerX == null && before.centerX == null)
+            ScreenMagnifierService.nativeVisionViewportCenter() else null)
+
     suspend fun apply(
         request: NativeVisionRequestedState,
         profileRevision: Long = request.revision,
@@ -52,6 +79,7 @@ class AndroidNativeVisionAdapter {
         requested: NativeVisionValue,
         profileRevision: Long,
         expectedBefore: NativeMagnificationSnapshot? = null,
+        preparedTarget: NativeMagnificationSnapshot? = null,
     ): NativeVisionApplicationResult = withContext(Dispatchers.Main.immediate) {
         val value = requested as? NativeVisionValue.Magnification
         if (value == null || !value.isValidFor(NativeVisionCapability.MAGNIFICATION)) return@withContext result(
@@ -70,11 +98,14 @@ class AndroidNativeVisionAdapter {
             requested, NativeVisionApplicationStatus.REJECTED, profileRevision,
             "Le grossissement a changé pendant la préparation. Aucune commande n’a été envoyée.",
         )
-        val target = before.copy(
-            enabled = value.enabled, scale = value.scale,
-            centerX = value.centerX ?: before.centerX,
-            centerY = value.centerY ?: before.centerY, mode = value.mode,
-        )
+        // The session passes the exact target already saved to its write-ahead journal.
+        val target = if (preparedTarget == null) prepareMagnificationTarget(value, before) else {
+            val preparedCenter = if (preparedTarget.centerX != null && preparedTarget.centerY != null)
+                preparedTarget.centerX to preparedTarget.centerY else null
+            preparedTarget.takeIf { it == before.targetFor(value, preparedCenter) }
+        }
+        if (target == null) return@withContext result(requested, NativeVisionApplicationStatus.NEEDS_USER_ACTION,
+            profileRevision, "Le centre de la fenêtre Android n’est pas disponible. Aucune commande n’a été envoyée.")
         setAndVerify(target, requested, profileRevision, restoring = false)
     }
 
@@ -115,8 +146,11 @@ class AndroidNativeVisionAdapter {
             val actual = readMagnificationState()
             if (actual != null && target.matches(actual)) return result(
                 requested, NativeVisionApplicationStatus.APPLIED_AUTO, revision,
-                if (restoring) "Le grossissement précédent a été restauré et relu." else
-                    "Le contrôleur Android a appliqué le grossissement ; son état a été relu.",
+                (if (restoring) "Le grossissement précédent a été restauré et relu." else
+                    "Le contrôleur Android a appliqué le grossissement ; son état a été relu.") +
+                    if (target.inactiveCenterUnobservable || actual.inactiveCenterUnobservable)
+                        " Activation, mode et facteur confirmés ; le centre de la fenêtre désactivée n’est pas observable, sans coordonnées inventées."
+                    else "",
                 actual.asValue(), restorationAvailable = !restoring,
             )
             delay(80)

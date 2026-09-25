@@ -42,12 +42,13 @@ class NativeMagnificationSession(
                 return@withContext listOf(failure(value, profileRevision,
                     "Le contexte ou le grossissement a changé ailleurs. Conservez explicitement ce réglage avant une nouvelle session."))
             }
-            val target = current.copy(enabled = value.enabled, scale = value.scale,
-                centerX = value.centerX ?: current.centerX, centerY = value.centerY ?: current.centerY, mode = value.mode)
+            val target = adapter.prepareMagnificationTarget(value, current) ?: return@withContext listOf(
+                failure(value, profileRevision, "Le centre de la fenêtre Android n’est pas disponible. Aucune modification n’a été faite.").copy(
+                    status = NativeVisionApplicationStatus.NEEDS_USER_ACTION))
             val journal = Journal(existing?.before ?: current, target, current, Build.FINGERPRINT)
             if (!writeJournal(journal)) return@withContext listOf(failure(value, profileRevision,
                 "Impossible de sauvegarder le grossissement précédent. Aucune modification n’a été faite."))
-            val result = adapter.applyMagnification(value, profileRevision, expectedBefore = current)
+            val result = adapter.applyMagnification(value, profileRevision, expectedBefore = current, preparedTarget = target)
             // Preserve the WAL even on error: accepted is not proof of application, or of no application.
             listOf(result.copy(restorationAvailable = true))
         } }
@@ -103,16 +104,17 @@ class NativeMagnificationSession(
     }
 
     private fun NativeMagnificationSnapshot.toJson(): JSONObject {
-        require(restorable)
-        return JSONObject().put("enabled", enabled).put("scale", scale).put("centerX", centerX)
-            .put("centerY", centerY).put("mode", mode!!.name).put("activationExact", activationExact)
+        return JSONObject().also { json -> NativeMagnificationSnapshotCodec.encode(this).forEach { (key, value) ->
+            // JSONObject.put(key, null) deletes a key; explicit NULL preserves an observed absent viewport.
+            json.put(key, value ?: JSONObject.NULL)
+        } }
     }
 
-    private fun fromJson(json: JSONObject): NativeMagnificationSnapshot = NativeMagnificationSnapshot(
-        enabled = json.getBoolean("enabled"), scale = json.getDouble("scale").toFloat(),
-        centerX = json.getDouble("centerX").toFloat(), centerY = json.getDouble("centerY").toFloat(),
-        mode = NativeMagnificationMode.valueOf(json.getString("mode")), activationExact = json.getBoolean("activationExact"),
-    ).also { require(it.restorable) }
+    private fun fromJson(json: JSONObject): NativeMagnificationSnapshot = NativeMagnificationSnapshotCodec.decode(
+        NativeMagnificationSnapshotCodec.fields.associateWith { key ->
+            require(json.has(key))
+            if (json.isNull(key)) null else json.get(key)
+        })
 
     private data class Journal(val before: NativeMagnificationSnapshot, val expected: NativeMagnificationSnapshot,
                                val previousExpected: NativeMagnificationSnapshot, val fingerprint: String)
@@ -124,4 +126,27 @@ class NativeMagnificationSession(
         restorationAvailable = hasPendingRestoration(),
     )
     companion object { private val gate = Mutex() }
+}
+
+/** The journal's explicit nulls are distinct from a missing/corrupt field. Pure and independently testable. */
+internal object NativeMagnificationSnapshotCodec {
+    val fields = setOf("enabled", "scale", "centerX", "centerY", "mode", "activationExact")
+
+    fun encode(snapshot: NativeMagnificationSnapshot): Map<String, Any?> {
+        require(snapshot.restorable)
+        return mapOf("enabled" to snapshot.enabled, "scale" to snapshot.scale, "centerX" to snapshot.centerX,
+            "centerY" to snapshot.centerY, "mode" to snapshot.mode!!.name, "activationExact" to snapshot.activationExact)
+    }
+
+    fun decode(values: Map<String, Any?>): NativeMagnificationSnapshot {
+        require(values.keys.containsAll(fields))
+        return NativeMagnificationSnapshot(
+            enabled = values.getValue("enabled") as Boolean,
+            scale = (values.getValue("scale") as Number).toFloat(),
+            centerX = values.getValue("centerX")?.let { (it as Number).toFloat() },
+            centerY = values.getValue("centerY")?.let { (it as Number).toFloat() },
+            mode = NativeMagnificationMode.valueOf(values.getValue("mode") as String),
+            activationExact = values.getValue("activationExact") as Boolean,
+        ).also { require(it.restorable) }
+    }
 }
