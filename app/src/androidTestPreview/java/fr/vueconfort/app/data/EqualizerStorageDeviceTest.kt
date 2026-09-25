@@ -97,12 +97,14 @@ class EqualizerStorageDeviceTest {
             fixture.repository.saveOpticalPrescription(source.copy(leftEye = EyePrescription(sphere = 0.5f)))
             val refreshed = fixture.repository.equalizerProfile.first()!!
             assertEquals(ConfirmedBilanReference.from(fixture.repository.opticalPrescription.first()), refreshed.confirmedBilan)
+            assertEquals(1L, refreshed.revision)
             assertNull(refreshed.calculated)
             assertNull(refreshed.applied)
             assertEquals(preferences, refreshed.preferences)
             fixture.repository.deleteOpticalPrescription()
             assertNull(fixture.repository.opticalPrescription.first())
             assertNull(fixture.repository.equalizerProfile.first()!!.confirmedBilan)
+            assertEquals(2L, fixture.repository.equalizerProfile.first()!!.revision)
             assertEquals(preferences, fixture.repository.equalizerProfile.first()!!.preferences)
         } finally { fixture.close() }
     }
@@ -190,6 +192,145 @@ class EqualizerStorageDeviceTest {
             fixture.store.edit { it[EQUALIZER_KEY] = future }
             assertTrue(runCatching { fixture.repository.saveEqualizerProfile(draft.copy(preferences = EqualizerPreferences.Neutral)) }.isFailure)
             assertEquals(future, fixture.store.data.first()[EQUALIZER_KEY])
+        } finally { fixture.close() }
+    }
+
+    @Test fun initialSetupIsAtomicIdempotentAndUsesTheConfirmedBilanWithoutChangingLoupe() = runBlocking {
+        val fixture = Fixture()
+        try {
+            fixture.seedOtherFeatures()
+            val loupe = fixture.repository.activeAssistProfile.first()
+            assertNull(fixture.repository.equalizerProfile.first())
+            fixture.repository.completeInitialSetup()
+            val created = fixture.repository.equalizerProfile.first()!!
+            assertTrue(fixture.repository.onboardingCompleted.first())
+            assertEquals(ConfirmedBilanReference.from(fixture.repository.opticalPrescription.first()), created.confirmedBilan)
+            val custom = fixture.repository.saveEqualizerProfile(created.copy(
+                preferences = EqualizerPreferences(contrast = 1.3f), revision = created.revision + 1))
+            val raw = fixture.store.data.first()[EQUALIZER_KEY]
+            fixture.repository.completeInitialSetup()
+            assertEquals(raw, fixture.store.data.first()[EQUALIZER_KEY])
+            assertEquals(custom, fixture.repository.ensurePersonalProfile())
+            assertEquals(loupe, fixture.repository.activeAssistProfile.first())
+            fixture.reopen()
+            assertTrue(fixture.repository.onboardingCompleted.first())
+            assertEquals(custom, fixture.repository.equalizerProfile.first())
+        } finally { fixture.close() }
+    }
+
+    @Test fun malformedPersonalProfileCannotCompleteInitialSetupOrBeReplaced() = runBlocking {
+        val fixture = Fixture()
+        try {
+            fixture.store.edit { it[EQUALIZER_KEY] = "future-profile-unknown" }
+            val before = fixture.store.data.first().asMap()
+            assertTrue(runCatching { fixture.repository.completeInitialSetup() }.isFailure)
+            assertFalse(fixture.repository.onboardingCompleted.first())
+            assertEquals(before, fixture.store.data.first().asMap())
+        } finally { fixture.close() }
+    }
+
+    @Test fun completedComfortCalibrationSeedsNeutralControlsAndKeepsBilanAndNativeState() = runBlocking {
+        val fixture = Fixture()
+        try {
+            fixture.seedOtherFeatures()
+            fixture.repository.ensurePersonalProfile()
+            val native = fixture.repository.updateNativeVision { it.copy(enabled = true) }.nativeVision
+            val bilan = fixture.repository.opticalPrescription.first()
+            val loupe = fixture.repository.activeAssistProfile.first()
+            val neutral = fixture.repository.equalizerProfile.first()!!
+            fixture.repository.saveCalibratedProfile(VisualProfile(fontSizeSp = 28.5f, fontWeight = 650,
+                warmthPercent = 21, calibrated = true, calibrationConfidence = 0.7f))
+            val personal = fixture.repository.equalizerProfile.first()!!
+            assertEquals(1.5f, personal.preferences.sizeScale, 0f)
+            assertEquals(650, personal.preferences.fontWeight)
+            assertEquals(0f, personal.preferences.sharpness, 0f)
+            assertEquals(neutral.revision + 1, personal.revision)
+            assertEquals("USER_COMFORT_CALIBRATION", personal.provenance.origin)
+            assertNull(personal.calculated)
+            assertNull(personal.applied)
+            assertEquals(native, personal.nativeVision)
+            assertEquals(bilan, fixture.repository.opticalPrescription.first())
+            assertEquals(loupe, fixture.repository.activeAssistProfile.first())
+            assertEquals(21, fixture.repository.profile.first().warmthPercent)
+            fixture.reopen()
+            assertEquals(personal, fixture.repository.equalizerProfile.first())
+        } finally { fixture.close() }
+    }
+
+    @Test fun calibrationDoesNotOverwriteAlreadyAdjustedEqualizerOrInventOpticalData() = runBlocking {
+        val fixture = Fixture()
+        try {
+            val custom = fixture.repository.saveEqualizerProfile(EqualizerProfile(
+                preferences = EqualizerPreferences(sizeScale = 1.4f, sharpness = 0.3f, contrast = 1.2f), revision = 7))
+            fixture.repository.saveCalibratedProfile(VisualProfile(fontSizeSp = 35f, fontWeight = 800, calibrated = true))
+            assertEquals(custom, fixture.repository.equalizerProfile.first())
+            assertTrue(fixture.repository.profile.first().calibrated)
+            assertNull(fixture.repository.opticalPrescription.first())
+        } finally { fixture.close() }
+    }
+
+    @Test fun incompleteCalibrationCannotMutateAnyStoredData() = runBlocking {
+        val fixture = Fixture()
+        try {
+            fixture.seedOtherFeatures()
+            val before = fixture.store.data.first().asMap()
+            assertTrue(runCatching { fixture.repository.saveCalibratedProfile(VisualProfile(calibrated = false)) }.isFailure)
+            assertEquals(before, fixture.store.data.first().asMap())
+        } finally { fixture.close() }
+    }
+
+    @Test fun staleEqualizerSaveAfterBilanChangeAdvancesRevisionAndDropsOldReceipt() = runBlocking {
+        val fixture = Fixture()
+        try {
+            fixture.seedOtherFeatures()
+            val stale = fixture.repository.saveEqualizerProfile(EqualizerProfile(revision = 10,
+                confirmedBilan = ConfirmedBilanReference.from(fixture.repository.opticalPrescription.first()),
+                applied = EqualizerRenderRecord("synthetic", EqualizerRenderDecision.APPLY, emptyMap(), sourceRevision = 10)))
+            fixture.repository.saveOpticalPrescription(OpticalPrescription(rightEye = EyePrescription(sphere = 2f)))
+            val changed = fixture.repository.equalizerProfile.first()!!
+            val saved = fixture.repository.saveEqualizerProfile(stale)
+            assertTrue(saved.revision > changed.revision)
+            assertEquals(ConfirmedBilanReference.from(fixture.repository.opticalPrescription.first()), saved.confirmedBilan)
+            assertNull(saved.applied)
+            assertNull(saved.calculated)
+        } finally { fixture.close() }
+    }
+
+    @Test fun resettingLoupePresetsKeepsTheCentralProfileNativeRequestsBilanAndCalibration() = runBlocking {
+        val fixture = Fixture()
+        try {
+            fixture.seedOtherFeatures()
+            fixture.repository.saveEqualizerProfile(EqualizerProfile(preferences = EqualizerPreferences(sharpness = 0.4f)))
+            val personal = fixture.repository.updateNativeVision { it.copy(enabled = true,
+                requested = NativeVisionRequestedState(mapOf(NativeVisionCapability.MAGNIFICATION to
+                    NativeVisionValue.Magnification(true, 2f)), revision = 3, updatedAtMillis = 123)) }
+            val bilan = fixture.repository.opticalPrescription.first()
+            val reader = fixture.repository.profile.first()
+            fixture.repository.resetAssistProfiles()
+            assertEquals(personal, fixture.repository.equalizerProfile.first())
+            assertEquals(bilan, fixture.repository.opticalPrescription.first())
+            assertEquals(reader, fixture.repository.profile.first())
+            assertEquals(AssistProfile.STANDARD_ID, fixture.repository.activeAssistProfile.first().id)
+        } finally { fixture.close() }
+    }
+
+    @Test fun unsavedReaderDefaultsHaveStableUnknownDatesAcrossReadsAndReopening() = runBlocking {
+        val fixture = Fixture()
+        try {
+            val empty = fixture.store.data.first().asMap()
+            val reader = fixture.repository.profile.first()
+            assertEquals(0L, reader.createdAtMillis)
+            assertEquals(0L, reader.updatedAtMillis)
+            assertFalse(reader.calibrated)
+            assertEquals(reader, fixture.repository.profile.first())
+            assertEquals(empty, fixture.store.data.first().asMap())
+            fixture.repository.completeInitialSetup()
+            val afterSetup = fixture.store.data.first().asMap()
+            assertEquals(reader, fixture.repository.profile.first())
+            assertEquals(afterSetup, fixture.store.data.first().asMap())
+            fixture.reopen()
+            assertEquals(reader, fixture.repository.profile.first())
+            assertEquals(afterSetup, fixture.store.data.first().asMap())
         } finally { fixture.close() }
     }
 

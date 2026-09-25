@@ -54,6 +54,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -79,6 +80,8 @@ import fr.vueconfort.app.recommendation.PrescriptionProfileRecommendation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+
+enum class PrescriptionEntry { CHOOSE, MANUAL, DOCUMENT }
 
 /** Drafts, source images and OCR stay in memory, including across configuration changes. */
 class PrescriptionDraftViewModel : ViewModel() {
@@ -106,11 +109,20 @@ class PrescriptionDraftViewModel : ViewModel() {
     private var request = 0L
     private var seeded = false
     private var seedVersion: Long? = null
+    private var entryApplied = false
+    private var hasEdits = false
+
+    fun enter(entry: PrescriptionEntry, saved: OpticalPrescription?) {
+        if (entryApplied) return
+        entryApplied = true
+        seed(saved)
+        if (entry == PrescriptionEntry.MANUAL) manualEntry(saved)
+    }
 
     fun seed(saved: OpticalPrescription?) {
         if (seeded && seedVersion == saved?.updatedAtMillis) return
         // A late repository emission must not overwrite a draft already being edited.
-        if (seeded && seedVersion == null && (step != 0 || document != null || loading)) return
+        if (seeded && (hasEdits || document != null || loading || (seedVersion == null && step != 0))) return
         seeded = true
         seedVersion = saved?.updatedAtMillis
         right = inputFrom(saved?.rightEye)
@@ -125,6 +137,7 @@ class PrescriptionDraftViewModel : ViewModel() {
     }
 
     fun edited() {
+        hasEdits = true
         confirmed = false
         if (step == 2) step = 1
     }
@@ -144,6 +157,7 @@ class PrescriptionDraftViewModel : ViewModel() {
         importNotice = null
         readError = null
         showErrors = false
+        hasEdits = false
         confirmed = false
         step = 1
     }
@@ -155,6 +169,7 @@ class PrescriptionDraftViewModel : ViewModel() {
         source = PrescriptionSource.MANUAL
         document = null
         loading = true
+        hasEdits = true
         readError = null
         importNotice = null
         confirmed = false
@@ -223,11 +238,13 @@ fun OpticalPrescriptionScreen(
     onDelete: () -> Unit,
     onBack: () -> Unit,
     saving: Boolean = false,
-    operationError: String? = null
+    operationError: String? = null,
+    initialEntry: PrescriptionEntry = PrescriptionEntry.CHOOSE
 ) {
     val context = LocalContext.current
     BackHandler(enabled = saving) { /* Keep the active save and its navigation in this screen. */ }
     val draft: PrescriptionDraftViewModel = viewModel()
+    LaunchedEffect(initialEntry) { draft.enter(initialEntry, saved) }
     LaunchedEffect(saved?.updatedAtMillis) { draft.seed(saved) }
     var confirmDelete by remember { mutableStateOf(false) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -270,7 +287,7 @@ fun OpticalPrescriptionScreen(
             TextButton(onClick = { draft.cancelRead(); onBack() }, enabled = !saving) { Text("Retour") }
         })
     }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(scroll).padding(20.dp),
+        Column(Modifier.fillMaxSize().testTag("bilan_screen").padding(padding).verticalScroll(scroll).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)) {
             Text(when (draft.step) { 0 -> "Votre bilan, votre point de départ"; 1 -> "Vérifions vos informations"; else -> "Essayez votre affichage" },
                 style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -286,16 +303,16 @@ fun OpticalPrescriptionScreen(
 
             if (draft.step == 0) {
                 BilanCard(highlighted = true) {
-                    Text("Une photo, un PDF ou une saisie", style = MaterialTheme.typography.titleLarge,
+                    Text(if (initialEntry == PrescriptionEntry.DOCUMENT) "Importez votre bilan" else "Une photo, un PDF ou une saisie", style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold)
                     Text("Ajoutez le document de votre professionnel de la vue. VueConfort essaiera de repérer les valeurs utiles ; vous les vérifierez avant toute utilisation.")
                     Text("La lecture du document se fait sur ce téléphone. La photo et le texte extrait ne sont ni envoyés ni conservés par VueConfort. Seules les valeurs que vous confirmez seront enregistrées.",
                         style = MaterialTheme.typography.bodyMedium)
-                    Button(onClick = { picker.launch(arrayOf("application/pdf", "image/jpeg", "image/png", "image/webp")) },
+                    Button(onClick = { picker.launch(arrayOf("application/pdf", "image/jpeg", "image/png", "image/webp")) }, enabled = !saving,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(16.dp)) {
                         Text("Importer une photo ou un PDF")
                     }
-                    OutlinedButton(onClick = { draft.manualEntry(saved) }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    OutlinedButton(onClick = { draft.manualEntry(saved) }, enabled = !saving, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                         shape = RoundedCornerShape(16.dp)) {
                         Text(if (saved == null) "Commencer une saisie manuelle" else "Consulter mon bilan enregistré")
                     }
@@ -392,10 +409,12 @@ fun OpticalPrescriptionScreen(
                         Row(Modifier.fillMaxWidth().toggleable(value = draft.confirmed, role = Role.Checkbox,
                             onValueChange = { draft.confirmed = it }), verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(checked = draft.confirmed, onCheckedChange = null)
-                            Text("J’ai vérifié chaque valeur, son signe et l’œil concerné sur mon document.",
+                            Text(if (draft.source == PrescriptionSource.MANUAL)
+                                "J’ai vérifié chaque valeur, son signe et l’œil concerné dans ma correction connue."
+                            else "J’ai vérifié chaque valeur, son signe et l’œil concerné sur mon document.",
                                 modifier = Modifier.weight(1f))
                         }
-                        Text("Une reconnaissance automatique peut se tromper. Les valeurs ne sont utilisées qu’après votre vérification.",
+                        Text("Les valeurs ne sont utilisées qu’après votre vérification. Si une information est incertaine, laissez-la vide.",
                             style = MaterialTheme.typography.bodySmall)
                     }
                     if (draft.showErrors && errors.isNotEmpty()) BilanCard {
@@ -417,7 +436,7 @@ fun OpticalPrescriptionScreen(
                 BilanCard(highlighted = true) {
                     Text("Votre bilan est prêt", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                     Text("Vos valeurs confirmées restent sur ce téléphone, séparées de vos préférences de lecture.")
-                    Text("Vous allez retrouver le même égaliseur, avec vos réglages enregistrés ou un point de départ neutre. Ce premier étage ne calcule pas encore de correction optique à partir du bilan.",
+                    Text("Le bilan sera relié à votre profil. Vous retrouverez vos réglages dans l’égaliseur pour affiner votre confort. Un bilan seul ne garantit pas une correction optique de l’écran.",
                         style = MaterialTheme.typography.bodyMedium)
                 }
                 recommendation?.let { value ->

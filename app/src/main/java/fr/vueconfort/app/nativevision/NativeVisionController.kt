@@ -280,6 +280,29 @@ class NativeVisionController private constructor(context: Context) {
         }
     }
 
+    /** Erase the existing DataStore once, only after restoration, under the native writer barrier. */
+    suspend fun resetPersonalData() {
+        val barrierGeneration = beginBarrier()
+        try {
+            mutex.withLock {
+                check(barrierGeneration == generation.get()) {
+                    "Une autre opération est en cours. Réessayez l’effacement."
+                }
+                // Recheck after in-flight commands finish; never discard a newly created rollback.
+                check(!hasRestoration()) {
+                    "Restaurez les réglages du téléphone avant d’effacer les données."
+                }
+                repository.reset()
+                publishIfCurrent(barrierGeneration) { it.copy(profile = NativeVisionProfile(),
+                    loaded = true, restoring = false, saving = false, pendingRestoration = false,
+                    message = "Les données de VueConfort ont été effacées.", error = null) }
+            }
+        } finally {
+            publishIfCurrent(barrierGeneration) { it.copy(restoring = false, saving = false,
+                pendingRestoration = hasRestoration()) }
+        }
+    }
+
     private fun beginBarrier(): Long = synchronized(stateLock) {
         val next = generation.incrementAndGet()
         while (plans.tryReceive().isSuccess) { /* Drop pending snapshots before waiting for the writer. */ }

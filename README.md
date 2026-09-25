@@ -42,13 +42,19 @@ La **Loupe VueConfort** désigne la fonction Release qui pilote le grossissement
 
 ## Limites actuelles
 
-- La Release 1.0.1 est diffusée uniquement sur la piste Google Play de test fermé Alpha ; elle n’est pas disponible publiquement.
+- Les documents historiques mentionnent une piste de test fermé Alpha pour 1.0.1 ; son état actuel n’a pas été vérifié dans la console. L’intégration 1.1.0/code 4 prépare un AAB non signé, sans publication. Voir [le dossier de livraison](docs/PRODUCT_RELEASE_1_1_0.md) pour les prérequis de signature et de soumission.
 - Une validation physique a été effectuée sur Galaxy S25 ; la couverture Galaxy A53 et d’autres appareils reste à compléter.
 - Android ne fournit pas d’accès direct public à tous les sous-menus Samsung.
 - Le lecteur utilise localement le texte d’accessibilité explicitement demandé ; certaines applications n’exposent aucun texte exploitable.
 - La loupe agrandit via Android ; elle n’applique pas globalement netteté, gamma, température ou contraste.
 - La Release n’utilise aucune capture d’écran, MediaProjection ou enregistrement d’écran.
 - Le verrouillage, la veille, la rotation et les restrictions d’arrière-plan One UI peuvent interrompre temporairement le grossissement ou l’overlay et nécessitent des essais continus.
+
+## Stockage et suppression
+
+Les préférences du client restent dans le DataStore local existant. Le profil personnel de l’Égaliseur contient les demandes et les états Native Vision ; le bilan confirmé et les résultats de calibration conservent leurs enregistrements distincts et leur provenance. L’orchestrateur en assemble une vue sans créer de stockage concurrent. Les parcours initiaux réutilisent ce profil ; une calibration de confort ne remplace jamais les réglages de l’Égaliseur déjà personnalisés.
+
+Supprimer les bilans retire leurs valeurs et leur historique, invalide les références et les calculs associés, et conserve les préférences perceptives ainsi que la loupe. Réinitialiser les seuls profils de loupe ne modifie pas le profil personnel, les demandes natives ou le bilan. Supprimer le profil personnel seul conserve les réglages actuels du téléphone et son éventuel journal de restauration. L’effacement de toutes les données attend au contraire une restauration réussie des réglages pilotés par VueConfort ; si elle échoue ou reste en attente, l’effacement est refusé et le journal reste disponible. Les documents sources importés et le texte OCR ne sont pas persistés.
 
 ## Publication
 

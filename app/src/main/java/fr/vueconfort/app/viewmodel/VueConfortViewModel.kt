@@ -10,6 +10,7 @@ import fr.vueconfort.app.model.AutomationStatus
 import fr.vueconfort.app.model.UserVisualContext
 import fr.vueconfort.app.model.VisualProfile
 import fr.vueconfort.app.model.OpticalPrescription
+import fr.vueconfort.app.nativevision.NativeVisionController
 import fr.vueconfort.app.assessment.VisualComfortAssessment
 import fr.vueconfort.app.assessment.StandardizedAssessmentReport
 import kotlinx.coroutines.flow.SharingStarted
@@ -222,11 +223,23 @@ class VueConfortViewModel(
     fun deleteOpticalPrescription(onResult: (Result<Unit>) -> Unit) =
         performPrescriptionOperation(onResult) { repository.deleteOpticalPrescription() }
 
-    fun resetAll() {
-        viewModelScope.launch {
-            repository.reset()
+    fun resetAll(onResult: (Result<Unit>) -> Unit = {}) = performPrescriptionOperation(onResult) {
+        val controller = NativeVisionController.get(getApplication())
+        // The public controller cancels queued commands and awaits any in-flight write.
+        // Its failed restore keeps the rollback journal, so deletion must stop here.
+        controller.disable(restore = true).join()
+        val native = controller.state.value
+        check(!native.pendingRestoration && !native.restoring && !native.saving && native.error == null) {
+            native.error ?: "Restaurez les réglages du téléphone avant d’effacer les données."
         }
+        controller.resetPersonalData()
     }
+
+    fun completeInitialSetup(onResult: (Result<Unit>) -> Unit) =
+        performPrescriptionOperation(onResult) { repository.completeInitialSetup() }
+
+    fun saveCalibratedProfile(profile: VisualProfile, onResult: (Result<Unit>) -> Unit) =
+        performPrescriptionOperation(onResult) { repository.saveCalibratedProfile(profile) }
 
     fun setOnboardingCompleted(completed: Boolean) {
         viewModelScope.launch { repository.setOnboardingCompleted(completed) }

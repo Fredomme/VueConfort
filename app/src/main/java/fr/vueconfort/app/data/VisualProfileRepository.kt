@@ -16,6 +16,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import fr.vueconfort.app.equalizer.ConfirmedBilanReference
 import fr.vueconfort.app.equalizer.EqualizerProfile
+import fr.vueconfort.app.equalizer.EqualizerPreferences
 import fr.vueconfort.app.equalizer.EqualizerProfileCodec
 import fr.vueconfort.app.nativevision.NativeVisionProfile
 import fr.vueconfort.app.model.AgeRange
@@ -196,10 +197,10 @@ class VisualProfileRepository(
                 calibrated = preferences[Keys.CALIBRATED] ?: false,
                 calibrationConfidence =
                     preferences[Keys.CALIBRATION_CONFIDENCE] ?: 0f,
-                createdAtMillis =
-                    preferences[Keys.CREATED_AT] ?: System.currentTimeMillis(),
-                updatedAtMillis =
-                    preferences[Keys.UPDATED_AT] ?: System.currentTimeMillis()
+                // A missing reader record has no recorded date. Reading it must remain
+                // stable and must not invent a calibration or modification timestamp.
+                createdAtMillis = preferences[Keys.CREATED_AT] ?: 0L,
+                updatedAtMillis = preferences[Keys.UPDATED_AT] ?: 0L
             )
         }
 
@@ -246,28 +247,81 @@ class VisualProfileRepository(
         }
 
     suspend fun saveProfile(profile: VisualProfile) {
+        dataStore.edit { preferences -> writeVisualProfile(preferences, profile) }
+    }
+
+    private fun writeVisualProfile(preferences: MutablePreferences, profile: VisualProfile) {
+        preferences[Keys.PROFILE_ID] = profile.id
+        preferences[Keys.PROFILE_NAME] = profile.name
+        preferences[Keys.FONT_SIZE] = profile.fontSizeSp
+        preferences[Keys.FONT_WEIGHT] = profile.fontWeight
+        preferences[Keys.LETTER_SPACING] = profile.letterSpacingSp
+        preferences[Keys.LINE_HEIGHT] = profile.lineHeightMultiplier
+        preferences[Keys.FOREGROUND] = profile.foregroundArgb
+        preferences[Keys.BACKGROUND] = profile.backgroundArgb
+        preferences[Keys.COLUMN_WIDTH] = profile.columnWidthPercent
+        preferences[Keys.HORIZONTAL_MARGIN] = profile.horizontalMarginDp
+        preferences[Keys.BRIGHTNESS] = profile.brightnessPercent
+        preferences[Keys.WARMTH] = profile.warmthPercent
+        preferences[Keys.DESATURATION] = profile.desaturationPercent
+        preferences[Keys.READING_GUIDE] = profile.readingGuideEnabled
+        preferences[Keys.LINE_FOCUS] = profile.lineFocusEnabled
+        preferences[Keys.LOCAL_ZOOM] = profile.localZoomEnabled
+        preferences[Keys.CALIBRATED] = profile.calibrated
+        preferences[Keys.CALIBRATION_CONFIDENCE] =
+            profile.calibrationConfidence
+        preferences[Keys.CREATED_AT] = profile.createdAtMillis
+        preferences[Keys.UPDATED_AT] = System.currentTimeMillis()
+    }
+
+    /** All entry paths share the existing profile record; repeated entry never replaces saved choices. */
+    suspend fun ensurePersonalProfile(): EqualizerProfile {
+        var profile: EqualizerProfile? = null
+        dataStore.edit { preferences -> profile = ensurePersonalProfile(preferences) }
+        return checkNotNull(profile)
+    }
+
+    /** Complete onboarding only after the personal profile is durably available. */
+    suspend fun completeInitialSetup() {
         dataStore.edit { preferences ->
-            preferences[Keys.PROFILE_ID] = profile.id
-            preferences[Keys.PROFILE_NAME] = profile.name
-            preferences[Keys.FONT_SIZE] = profile.fontSizeSp
-            preferences[Keys.FONT_WEIGHT] = profile.fontWeight
-            preferences[Keys.LETTER_SPACING] = profile.letterSpacingSp
-            preferences[Keys.LINE_HEIGHT] = profile.lineHeightMultiplier
-            preferences[Keys.FOREGROUND] = profile.foregroundArgb
-            preferences[Keys.BACKGROUND] = profile.backgroundArgb
-            preferences[Keys.COLUMN_WIDTH] = profile.columnWidthPercent
-            preferences[Keys.HORIZONTAL_MARGIN] = profile.horizontalMarginDp
-            preferences[Keys.BRIGHTNESS] = profile.brightnessPercent
-            preferences[Keys.WARMTH] = profile.warmthPercent
-            preferences[Keys.DESATURATION] = profile.desaturationPercent
-            preferences[Keys.READING_GUIDE] = profile.readingGuideEnabled
-            preferences[Keys.LINE_FOCUS] = profile.lineFocusEnabled
-            preferences[Keys.LOCAL_ZOOM] = profile.localZoomEnabled
-            preferences[Keys.CALIBRATED] = profile.calibrated
-            preferences[Keys.CALIBRATION_CONFIDENCE] =
-                profile.calibrationConfidence
-            preferences[Keys.CREATED_AT] = profile.createdAtMillis
-            preferences[Keys.UPDATED_AT] = System.currentTimeMillis()
+            ensurePersonalProfile(preferences)
+            preferences[Keys.ONBOARDING_COMPLETED] = true
+        }
+    }
+
+    private fun ensurePersonalProfile(preferences: MutablePreferences): EqualizerProfile {
+        preferences[Keys.EQUALIZER_PROFILE]?.let { raw ->
+            return requireNotNull(EqualizerProfileCodec.decode(raw)) {
+                "Le profil existant n’est pas compatible. Il n’a pas été remplacé."
+            }
+        }
+        val profile = EqualizerProfile(confirmedBilan = ConfirmedBilanReference.from(
+            OpticalPrescriptionCodec.decode(preferences[Keys.OPTICAL_PRESCRIPTION])))
+        preferences[Keys.EQUALIZER_PROFILE] = EqualizerProfileCodec.encode(profile)
+        return profile
+    }
+
+    /** Comfort comparisons seed only untouched controls, never a prescription or a native command. */
+    suspend fun saveCalibratedProfile(profile: VisualProfile) {
+        require(profile.calibrated) { "La calibration doit être terminée avant l’enregistrement." }
+        dataStore.edit { preferences ->
+            val personal = ensurePersonalProfile(preferences)
+            writeVisualProfile(preferences, profile)
+            if (personal.preferences == EqualizerPreferences.Neutral) {
+                val defaults = VisualProfile()
+                val calibrated = personal.copy(
+                    preferences = personal.preferences.copy(
+                        sizeScale = profile.fontSizeSp / defaults.fontSizeSp,
+                        fontWeight = profile.fontWeight
+                    ).validated(),
+                    revision = personal.revision + 1,
+                    calculated = null,
+                    applied = null,
+                    provenance = personal.provenance.copy(origin = "USER_COMFORT_CALIBRATION",
+                        updatedAtMillis = System.currentTimeMillis())
+                )
+                preferences[Keys.EQUALIZER_PROFILE] = EqualizerProfileCodec.encode(calibrated)
+            }
         }
     }
 
@@ -328,10 +382,16 @@ class VisualProfileRepository(
             val bilan = OpticalPrescriptionCodec.decode(preferences[Keys.OPTICAL_PRESCRIPTION])
             val reference = ConfirmedBilanReference.from(bilan)
             val referenceChanged = clean.confirmedBilan != reference
+            val sourceChanged = existingProfile != null &&
+                (existingProfile.confirmedBilan != reference || !existingProfile.sameUserChoices(clean))
+            val revision = maxOf(clean.revision,
+                (existingProfile?.revision ?: 0L) + if (referenceChanged || sourceChanged) 1L else 0L)
+            val invalidateComputed = referenceChanged || revision != clean.revision
             val saved = clean.copy(
+                revision = revision,
                 confirmedBilan = reference,
-                calculated = if (referenceChanged) null else clean.calculated,
-                applied = if (referenceChanged) null else clean.applied,
+                calculated = if (invalidateComputed) null else clean.calculated,
+                applied = if (invalidateComputed) null else clean.applied,
                 // Native requests/receipts are committed independently. An old equalizer draft
                 // must never overwrite a newer command, confirmation or restoration reference.
                 nativeVision = existingProfile?.nativeVision ?: clean.nativeVision,
@@ -397,7 +457,8 @@ class VisualProfileRepository(
     }
 
     private fun writePrescription(preferences: MutablePreferences, value: OpticalPrescription) {
-        val stamped = value.copy(updatedAtMillis = System.currentTimeMillis())
+        val previousTimestamp = OpticalPrescriptionCodec.decode(preferences[Keys.OPTICAL_PRESCRIPTION])?.updatedAtMillis ?: 0L
+        val stamped = value.copy(updatedAtMillis = maxOf(System.currentTimeMillis(), previousTimestamp + 1))
         preferences[Keys.OPTICAL_PRESCRIPTION] = OpticalPrescriptionCodec.encode(stamped)
         val history = preferences[Keys.OPTICAL_PRESCRIPTION_HISTORY].orEmpty()
             .lineSequence().mapNotNull(OpticalPrescriptionCodec::decode)
@@ -413,7 +474,9 @@ class VisualProfileRepository(
         val profile = EqualizerProfileCodec.decode(preferences[Keys.EQUALIZER_PROFILE]) ?: return
         if (invalidateComputed || profile.confirmedBilan != reference) {
             preferences[Keys.EQUALIZER_PROFILE] = EqualizerProfileCodec.encode(
-                profile.copy(confirmedBilan = reference, calculated = null, applied = null)
+                profile.copy(confirmedBilan = reference, revision = profile.revision + 1,
+                    calculated = null, applied = null,
+                    provenance = profile.provenance.copy(updatedAtMillis = System.currentTimeMillis()))
             )
         }
     }
