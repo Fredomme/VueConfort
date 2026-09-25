@@ -128,9 +128,8 @@ fun EqualizerScreen(onBack: () -> Unit, onBilan: () -> Unit,
                                 }, label = { Text(label) }, modifier = Modifier.weight(1f).testTag("eq_scene_$tag"))
                             }
                         }
-                        EqualizerPreview(preferences, scene, original, commandId,
-                            Modifier.fillMaxWidth().height(previewHeight), onApplied = { viewModel.recordApplied(it) },
-                            revision = state.draft.revision)
+                        fr.vueconfort.app.orchestration.OrchestratedEqualizerPreview(state.draft, original, commandId,
+                            Modifier.fillMaxWidth().height(previewHeight), onApplied = { viewModel.recordApplied(it) })
                         Box(Modifier.fillMaxWidth().heightIn(min = 44.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (original) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)

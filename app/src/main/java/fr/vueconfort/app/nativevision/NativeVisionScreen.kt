@@ -38,6 +38,7 @@ fun NativeVisionScreen(onBack: () -> Unit, model: NativeVisionViewModel = viewMo
             if (!state.loaded) {
                 if (state.error == null) CircularProgressIndicator() else Text(state.error!!)
             } else {
+                fr.vueconfort.app.orchestration.VisionStatusCard()
                 ReluminoControls(state, model)
                 NativeCard("Grossissement", "L’agrandissement Android de votre loupe, avec ses commandes habituelles.") {
                     val value = (state.profile.requested.values[NativeVisionCapability.MAGNIFICATION] as? NativeVisionValue.Magnification)

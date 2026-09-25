@@ -82,6 +82,8 @@ fun HomeScreen(
                 TextButton(onClick = onEqualizer) { Text("Essayer immédiatement · sans correction connue") }
             }
 
+            fr.vueconfort.app.orchestration.VisionStatusCard()
+
             HomeSection {
                 Text("Mon affichage", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 Text("Retrouvez les aides de votre téléphone et configurez les contours Samsung si disponibles.")

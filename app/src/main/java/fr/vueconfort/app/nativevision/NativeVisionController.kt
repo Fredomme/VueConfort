@@ -7,6 +7,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import fr.vueconfort.app.BuildConfig
 import fr.vueconfort.app.data.VisualProfileRepository
+import fr.vueconfort.app.orchestration.*
+import fr.vueconfort.app.equalizer.EqualizerProfile
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -42,6 +44,7 @@ class NativeVisionController private constructor(context: Context) {
     private val mutex = Mutex()
     private val stateLock = Any()
     private val generation = AtomicLong()
+    private val orchestrationSession = java.util.UUID.randomUUID().toString()
     private val plans = Channel<Plan>(Channel.CONFLATED)
     private val _state = MutableStateFlow(NativeVisionUiState())
     val state: StateFlow<NativeVisionUiState> = _state.asStateFlow()
@@ -126,10 +129,22 @@ class NativeVisionController private constructor(context: Context) {
                 else it.copy(enabled = true, requested = plan.requested, capabilities = caps)
             }
             if (plan.generation != generation.get()) return
-            val results = mutableListOf<NativeVisionApplicationResult>()
-            val mag = plan.requested.values.filterKeys { it == NativeVisionCapability.MAGNIFICATION }
+            val source = repository.equalizerProfile.first() ?: EqualizerProfile()
+            val visualPlan = VisionRuntime.plan(VisionProfileSnapshot(source.copy(nativeVision =
+                source.nativeVision.copy(enabled = true, requested = plan.requested))), caps,
+                orchestrationSession, pendingNativeCommand = true)
+            // Preserve the separate historical Lab dispatch. This commercial increment neither
+            // qualifies nor disables privileged laboratory paths.
+            val admitted = if (variant == NativeVisionVariant.LAB) plan.requested.values.keys else visualPlan.transformations.filter {
+                it.canExecuteAutomatically || it.disposition == VisionPlanDisposition.GUIDED
+            }.map { (it.request.payload as EnginePayload.Native).capability }.toSet()
+            val results = visualPlan.transformations.filter {
+                (it.request.payload as EnginePayload.Native).capability !in admitted
+            }.map { VisionRuntime.refusal(it, plan.requested.revision) }.toMutableList()
+            if (plan.generation != generation.get()) return
+            val mag = plan.requested.values.filterKeys { it == NativeVisionCapability.MAGNIFICATION && it in admitted }
             if (mag.isNotEmpty()) results += android.apply(plan.requested.copy(values = mag), plan.requested.revision)
-            val others = plan.requested.copy(values = plan.requested.values - NativeVisionCapability.MAGNIFICATION)
+            val others = plan.requested.copy(values = plan.requested.values.filterKeys { it != NativeVisionCapability.MAGNIFICATION && it in admitted })
             if (plan.generation != generation.get()) return
             val labValues = if (lab == null) emptyMap() else others.values.filterKeys { capability ->
                 caps[capability]?.let { it.canApplyAutomatically && it.engine == NativeVisionEngine.SAMSUNG_LAB } == true

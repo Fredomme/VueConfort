@@ -1,6 +1,7 @@
 package fr.vueconfort.app.nativevision
 
 import android.app.UiAutomation
+import android.content.Intent
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
@@ -15,6 +16,8 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.test.platform.app.InstrumentationRegistry
 import fr.vueconfort.app.BuildConfig
 import fr.vueconfort.app.MainActivity
@@ -27,6 +30,7 @@ import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 
 /** Real Activity navigation. The only cross-app observation is an event's package and class name. */
 class NativeVisionNavigationDeviceTest {
@@ -65,9 +69,13 @@ class NativeVisionNavigationDeviceTest {
         }
         runBlocking { controller.refresh().join() }
         rule.waitForIdle()
-        val beforeResumeTimestamp = controller.state.value.capabilities!!.observedAtMillis
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val automation = instrumentation.getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES)
+        val resumeEvents = AtomicInteger()
+        val lifecycleObserver = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) resumeEvents.incrementAndGet()
+        }
+        rule.runOnUiThread { rule.activity.lifecycle.addObserver(lifecycleObserver) }
         var settingsOpened = false
         try {
             val event = automation.executeAndWaitForEvent({
@@ -83,14 +91,38 @@ class NativeVisionNavigationDeviceTest {
             @Suppress("DEPRECATION")
             event.recycle()
 
-            // The testing framework injects only Back. No shell identity, Secure write, or Settings interaction is used.
+            // Settings can reuse an existing task: observe its settled foreground before returning.
+            var settingsStableSince: Long? = null
+            assertTrue("Settings must be stably foreground before Back", awaitCondition(10_000) {
+                if (foregroundPackage(automation) != "com.android.settings") {
+                    settingsStableSince = null
+                    false
+                } else {
+                    val now = SystemClock.uptimeMillis()
+                    if (settingsStableSince == null) settingsStableSince = now
+                    now - requireNotNull(settingsStableSince) >= 500
+                }
+            })
+            val beforeResumeTimestamp = controller.state.value.capabilities!!.observedAtMillis
+            val beforeResumeEvents = resumeEvents.get()
+            // Back may expose an older Settings page or the launcher in a reused Settings task.
+            // The fallback brings the existing source Activity forward through a public Intent only.
             pressBack(automation)
+            val returnMode = if (awaitCondition(2_000) {
+                    foregroundPackage(automation) == rule.activity.packageName && resumeEvents.get() > beforeResumeEvents
+                }) "BACK" else {
+                returnToSource()
+                "EXPLICIT_REORDER_TO_FRONT"
+            }
+            assertTrue("The source Activity must actually resume in the foreground", awaitCondition(10_000) {
+                foregroundPackage(automation) == rule.activity.packageName && resumeEvents.get() > beforeResumeEvents
+            })
             settingsOpened = false
+            // Do not call refresh here: this must be the Native Vision screen's ON_RESUME refresh.
             rule.waitUntil(10_000) {
                 controller.state.value.capabilities?.observedAtMillis?.let { it > beforeResumeTimestamp } == true
             }
             rule.onNodeWithTag("native_configure_relumino").assertExists()
-            runBlocking { controller.refresh().join() }
             rule.waitForIdle()
             val after = controller.state.value.profile
             assertTrue("Navigation must preserve requested native preferences", before.requested == after.requested)
@@ -99,13 +131,41 @@ class NativeVisionNavigationDeviceTest {
             File(rule.activity.filesDir, "native-vision-commercial-ui-navigation.json").writeText(JSONObject()
                 .put("result", "PASS").put("homeRoute", if (usedExistingHome) "EXISTING_HOME" else "REAL_HOME_COMPOSABLE_WITHOUT_ONBOARDING_WRITE")
                 .put("settingsActivityObserved", actualClass).put("publicNavigation", true)
+                .put("returnMode", returnMode).put("sourceResumeObserved", true)
+                .put("automaticRefreshObservedBeforeManualRefresh", true)
+                .put("capabilitiesBeforeReturnMillis", beforeResumeTimestamp)
+                .put("capabilitiesAfterReturnMillis", controller.state.value.capabilities!!.observedAtMillis)
                 .put("returnedAndRevalidated", true).put("requestedPreferencesUnchanged", true)
                 .put("reluminoSettingsUnchanged", true).put("screenCaptured", false).toString(2))
         } finally {
-            if (settingsOpened || automation.rootInActiveWindow?.packageName?.toString() == "com.android.settings") {
-                pressBack(automation)
+            try {
+                if (settingsOpened || foregroundPackage(automation) == "com.android.settings") returnToSource()
+            } finally {
+                rule.runOnUiThread { rule.activity.lifecycle.removeObserver(lifecycleObserver) }
             }
         }
+    }
+
+    private fun returnToSource() = rule.runOnUiThread {
+        rule.activity.startActivity(Intent(rule.activity, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+    }
+
+    private fun foregroundPackage(automation: UiAutomation): String? {
+        val root = automation.rootInActiveWindow ?: return null
+        return try { root.packageName?.toString() } finally {
+            @Suppress("DEPRECATION")
+            root.recycle()
+        }
+    }
+
+    private fun awaitCondition(timeoutMillis: Long, condition: () -> Boolean): Boolean {
+        val deadline = SystemClock.uptimeMillis() + timeoutMillis
+        while (SystemClock.uptimeMillis() < deadline) {
+            if (condition()) return true
+            SystemClock.sleep(50)
+        }
+        return condition()
     }
 
     private fun pressBack(automation: UiAutomation) {
