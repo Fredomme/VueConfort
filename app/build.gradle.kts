@@ -28,6 +28,7 @@ android {
         versionCode = releaseVersionCode
         versionName = releaseVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("boolean", "NATIVE_VISION_LAB", "false")
     }
 
     buildFeatures {
@@ -73,6 +74,13 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
+        create("lab") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".lab"
+            versionNameSuffix = "-lab"
+            buildConfigField("boolean", "NATIVE_VISION_LAB", "true")
+            matchingFallbacks += "debug"
+        }
         create("preview") {
             initWith(getByName("debug"))
             applicationIdSuffix = ".preview"
@@ -83,6 +91,14 @@ android {
 
     // Exercises the commercial main sources in an isolated package, without the research launcher.
     sourceSets.getByName("preview").java.srcDir("src/release/java")
+    sourceSets.getByName("lab").java.srcDir("src/release/java")
+    listOf("release", "preview", "debug").forEach {
+        sourceSets.getByName(it).java.srcDir("src/nativeCommercial/java")
+    }
+    if (providers.gradleProperty("nativeLabTests").isPresent) {
+        testBuildType = "lab"
+        sourceSets.getByName("androidTest").java.setSrcDirs(listOf("src/androidTestLab/java"))
+    }
     if (providers.gradleProperty("commercialPreviewTests").isPresent) {
         testBuildType = "preview"
         sourceSets.getByName("androidTest").java.setSrcDirs(listOf("src/androidTestPreview/java"))
