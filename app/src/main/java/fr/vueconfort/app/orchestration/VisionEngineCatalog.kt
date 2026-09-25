@@ -16,8 +16,8 @@ data class VisionResearchEngineMetadata(
 object VisionEngineCatalog {
     fun defaultEngines(): List<VisionEngine> = listOf(
         AndroidPublicVisionEngine(), SamsungGuidedVisionEngine(), AndroidSettingsGuidedVisionEngine(),
-        PerceptualPreviewVisionEngine()
-    ) + researchEngines.map(::OpticalResearchVisionEngine) + FutureDisplayLensVisionEngine()
+        PerceptualPreviewVisionEngine(), OpticalV24VisionEngine()
+    ) + researchEngines.filterNot { it.modelId == "v2.4" }.map(::OpticalResearchVisionEngine) + FutureDisplayLensVisionEngine()
 
     /** work/ and outputs/ refer to the research workspace; Desktop/ refers to the original desktop archive. */
     val researchEngines: List<VisionResearchEngineMetadata> = listOf(

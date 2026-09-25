@@ -4,7 +4,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class VisionEngineCatalogTest {
-    @Test fun everyResearchModelRemainsInaccessibleEvenWhenExperimentalUseAndAllTransportsAreAllowed() {
+    @Test fun researchMetadataCannotExecuteWithoutItsTypedInputsEvenWhenExperimentalUseIsAllowed() {
         val catalog = VisionEngineCatalog.defaultEngines()
         assertEquals(catalog.size, catalog.map { it.descriptor.engineId }.distinct().size)
         assertEquals(setOf("v2", "v2.1", "v2.2", "v2.3", "v2.4", "d4", "d5", "vision-pixels", "vision-optical", "gpu-projection"),
@@ -13,9 +13,10 @@ class VisionEngineCatalogTest {
             val request = opticalRequest(metadata.modelId)
             val candidates = catalog.mapNotNull { it.assess(request, context) }
             assertEquals(1, candidates.size)
-            assertEquals(VisionEngineAvailability.INACCESSIBLE, candidates.single().availability)
+            assertEquals(if (metadata.modelId == "v2.4") VisionEngineAvailability.REJECTED else
+                VisionEngineAvailability.INACCESSIBLE, candidates.single().availability)
             val plan = VisionOrchestrator(catalog).plan("profile", 1, context, listOf(request))
-            assertEquals(if (metadata.category == VisionEngineCategory.PERCEPTUAL)
+            assertEquals(if (metadata.category == VisionEngineCategory.PERCEPTUAL || metadata.modelId == "v2.4")
                 VisionPlanDisposition.REJECTED else VisionPlanDisposition.UNAVAILABLE, plan.transformations.single().disposition)
             assertEquals(metadata.category, OpticalResearchVisionEngine(metadata).descriptor.category)
             assertTrue(plan.executable.isEmpty())

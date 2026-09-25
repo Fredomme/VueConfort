@@ -1,6 +1,6 @@
 # Orchestration additive de VueConfort
 
-Le profil existant reste la source des choix. Aucun moteur historique n’est remplacé ou réimporté dans cette branche. Le natif est un backend supplémentaire ; aucun accès `WRITE_SECURE_SETTINGS` ni transport Display-Lens n’est ajouté.
+Le profil existant reste la source des choix. Aucun moteur historique n’est remplacé. Les sources V2.4 et leur dépendance Fourier V2 sont désormais raccordées sans modification scientifique ; les autres références restent conservées dans leur projet d’origine. Le natif est un backend supplémentaire ; aucun accès `WRITE_SECURE_SETTINGS` ni transport Display-Lens n’est ajouté.
 
 ```text
 bilan facultatif + calibration enregistrée + égaliseur + contexte
@@ -23,10 +23,13 @@ bilan facultatif + calibration enregistrée + égaliseur + contexte
 | Samsung guidé | `SamsungNativeVisionAdapter` | Prototype ; réglages système, sans écriture protégée |
 | Réglages Android guidés | Lecture/guidage existants des autres capacités | Prototype ; aucune assimilation à une fonction Samsung |
 | Aperçu perceptif | `renderRecord`, `toOpticalSettings`, `EqualizerPreview` | Exécution appareil documentée ; uniquement l’aperçu interne |
-| Recherche optique / Vision / GPU | Catalogue de signatures et références existantes | Expérimental et inaccessible depuis cette APK |
+| V2.4 optique | `ScientificRendererV24`, contrat/kernel V2.4 et Fourier V2 inchangés | Adaptateur exécutable expérimental ; image fixe 128 × 128, entrées complètes et surface 1:1 qualifiée requises ; indisponible pour les profils clients actuels |
+| Autres recherches optiques / Vision / GPU | Catalogue de signatures et références existantes | Expérimental et inaccessible depuis cette APK |
 | Display-Lens | Contrat de transport futur | Indisponible, aucune implémentation |
 
-Le catalogue référence V2, V2.1, V2.2, V2.3, V2.4, D4/D5, Vision pixels, Vision optique et GPU. V3 et D1–D3 restent les sources des contrats D4/D5. Les chemins `work/`, `outputs/` et `Desktop/` du catalogue désignent le patrimoine local existant : ce ne sont pas des bibliothèques chargées par l’application, ni des fichiers nouvellement publiés.
+Le catalogue référence V2, V2.1, V2.2, V2.3, V2.4, D4/D5, Vision pixels, Vision optique et GPU. V3 et D1–D3 restent les sources des contrats D4/D5. Les chemins `work/`, `outputs/` et `Desktop/` du catalogue désignent le patrimoine local existant. Seules les quatre sources identifiées dans `app/src/opticalReference/SHA256SUMS` sont copiées et compilées pour le raccord V2.4 ; les autres références ne sont pas chargées par l’application.
+
+`OpticalV24Input` conserve le contrat original et copie les pixels d’entrée. `OpticalV24VisionEngine.render` revalide le plan et appelle uniquement la condition `P` du moteur original. Ses décisions, sorties et diagnostics ne sont ni corrigés ni remplacés pour rendre le résultat applicable. Un contexte commercial refuse la maturité expérimentale. Les modèles synthétiques ne sont pas des modèles personnels, une ordonnance n’est pas transformée en résidu de près et une surface agrandie, recadrée, périmée ou sans champ gris requis est rejetée. `opticalReadinessRequest()` décrit explicitement les entrées absentes du profil actuel. Le résultat CPU ne porte aucun reçu de dessin : il ne peut pas devenir « actif » sans nouvelle preuve de la surface réelle. Aucun nouvel écran de laboratoire n’est ajouté.
 
 Les preuves distinguent présence du code, compilation, tests unitaires, tests numériques, instrumentation, exécution appareil, effet physique, bénéfice perceptif et usage commercial. `NUMERICAL_TESTED` décrit l’existence d’un essai, jamais son succès universel : le résultat défavorable V2.1 est conservé explicitement. Aucun moteur n’est promu `COMMERCIAL_VALIDATED` dans cet incrément.
 

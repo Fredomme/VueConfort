@@ -1,4 +1,6 @@
 import java.util.Properties
+import com.android.build.api.artifact.SingleArtifact
+import javax.xml.parsers.DocumentBuilderFactory
 
 plugins {
     id("com.android.application")
@@ -89,6 +91,8 @@ android {
         }
     }
 
+    // Exact numerical reference sources, without their original research launchers or transports.
+    sourceSets.getByName("main").java.srcDir("src/opticalReference/java")
     // Exercises the commercial main sources in an isolated package, without the research launcher.
     sourceSets.getByName("preview").java.srcDir("src/release/java")
     sourceSets.getByName("lab").java.srcDir("src/release/java")
@@ -104,6 +108,62 @@ android {
         sourceSets.getByName("androidTest").java.setSrcDirs(listOf("src/androidTestPreview/java"))
     }
 
+}
+
+// Verify the merged artifact, including manifests contributed by dependencies.
+// A release build must fail if a testing entry point or a privileged permission leaks in.
+androidComponents {
+    onVariants(selector().withBuildType("release")) { variant ->
+        val mergedManifest = variant.artifacts.get(SingleArtifact.MERGED_MANIFEST)
+        val verifyManifest = tasks.register("verifyCommercialReleaseManifest") {
+            group = "verification"
+            description = "Checks the commercial package, permissions and exposed components."
+            inputs.file(mergedManifest)
+            doLast {
+                val factory = DocumentBuilderFactory.newInstance().apply {
+                    isNamespaceAware = true
+                    setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+                }
+                val document = factory.newDocumentBuilder().parse(mergedManifest.get().asFile)
+                val androidNamespace = "http://schemas.android.com/apk/res/android"
+                fun org.w3c.dom.Element.android(name: String) = getAttributeNS(androidNamespace, name)
+                fun elements(tag: String): List<org.w3c.dom.Element> {
+                    val nodes = document.getElementsByTagName(tag)
+                    return (0 until nodes.length).map { nodes.item(it) as org.w3c.dom.Element }
+                }
+                check(document.documentElement.getAttribute("package") == "fr.vueconfort.app")
+                val allowedPermissions = setOf("android.permission.POST_NOTIFICATIONS",
+                    "fr.vueconfort.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION")
+                val requested = (elements("uses-permission") + elements("uses-permission-sdk-23"))
+                    .map { it.android("name") }.toSet()
+                check(requested.all { it in allowedPermissions }) {
+                    "Unexpected commercial permissions: ${requested - allowedPermissions}"
+                }
+                val app = elements("application").single()
+                check(app.android("debuggable") != "true" && app.android("testOnly") != "true")
+                check(app.android("allowBackup") == "false")
+                val ownComponents = mapOf(
+                    "fr.vueconfort.app.MainActivity" to ("activity" to ""),
+                    "fr.vueconfort.app.magnifier.ScreenMagnifierService" to
+                        ("service" to "android.permission.BIND_ACCESSIBILITY_SERVICE"),
+                    "fr.vueconfort.app.core.VueConfortTileService" to
+                        ("service" to "android.permission.BIND_QUICK_SETTINGS_TILE"),
+                    "fr.vueconfort.app.core.CoreActionReceiver" to ("receiver" to "")
+                )
+                listOf("activity", "activity-alias", "service", "receiver", "provider").forEach { tag ->
+                    elements(tag).filter { it.android("name").startsWith("fr.vueconfort.") }.forEach { component ->
+                        val name = component.android("name")
+                        check(ownComponents[name]?.first == tag) { "Unexpected commercial component: $name" }
+                        check(component.android("permission") == ownComponents.getValue(name).second)
+                        if (tag == "receiver") check(component.android("exported") == "false")
+                    }
+                }
+                logger.lifecycle("Commercial Release manifest verified: no test entry point, network or privileged permission.")
+            }
+        }
+        tasks.matching { it.name in setOf("assembleRelease", "bundleRelease", "lintRelease") }
+            .configureEach { dependsOn(verifyManifest) }
+    }
 }
 
 dependencies {
