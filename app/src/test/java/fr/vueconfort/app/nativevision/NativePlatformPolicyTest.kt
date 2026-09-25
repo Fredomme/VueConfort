@@ -235,4 +235,66 @@ class NativePlatformPolicyTest {
             appliedFullscreen.copy(centerY = null), listOf(appliedFullscreen)))
         assertFalse(NativeMagnificationRestorePolicy.requiresModeTransition(baseline, appliedFullscreen))
     }
+
+    @Test fun userOffNormalizesOnlyTheCommandAndPreservesDormantPreferencesForOn() {
+        val dormant = NativeVisionValue.Magnification(false, 2.5f, 200f, 400f, NativeMagnificationMode.WINDOW)
+        val offTarget = appliedFullscreen.targetFor(dormant, 1f to 2f)!!
+        assertFalse(offTarget.enabled)
+        assertEquals(1f, offTarget.scale!!, 0f)
+        assertEquals(NativeMagnificationMode.FULLSCREEN, offTarget.mode)
+        assertNull(offTarget.centerX)
+        assertNull(offTarget.centerY)
+        assertEquals(2.5f, dormant.scale, 0f)
+        assertEquals(NativeMagnificationMode.WINDOW, dormant.mode)
+        assertEquals(200f, dormant.centerX!!, 0f)
+        val onTarget = offTarget.targetFor(dormant.copy(enabled = true))!!
+        assertEquals(NativeVisionValue.Magnification(true, 2.5f, 200f, 400f, NativeMagnificationMode.WINDOW), onTarget.asValue())
+    }
+
+    @Test fun userOffNormalizationDoesNotRelaxSnapshotRestorationOrChangeItsSavedBaseline() {
+        val original = NativeMagnificationSnapshotCodec.encode(appliedFullscreen)
+        val off = appliedFullscreen.targetFor(NativeVisionValue.Magnification(false, 4f,
+            mode = NativeMagnificationMode.WINDOW))!!
+        assertTrue(off.matches(interruptedInactiveFullscreen))
+        assertFalse(off.matches(interruptedInactiveFullscreen.copy(scale = 2f)))
+        assertFalse(off.matches(interruptedInactiveFullscreen.copy(mode = NativeMagnificationMode.WINDOW)))
+        assertEquals(appliedFullscreen, NativeMagnificationSnapshotCodec.decode(original))
+        assertFalse(appliedFullscreen.matches(off))
+    }
+
+    @Test fun alreadyInactiveReadbackSucceedsWithoutClaimingANewCommandOrDormantModeApplication() {
+        val dormant = NativeVisionValue.Magnification(false, 2f, mode = NativeMagnificationMode.FULLSCREEN)
+        val target = inactiveWithoutViewport.targetFor(dormant)!!
+        val result = AndroidNativeVisionAdapter().confirmAlreadyAtTarget(dormant, target, inactiveWithoutViewport, 4)!!
+        assertEquals(NativeVisionApplicationStatus.APPLIED_AUTO, result.status)
+        assertEquals(NativeVisionConfirmation.READ_BACK_CONFIRMED, result.confirmation)
+        assertEquals(dormant, result.requested)
+        assertEquals(inactiveWithoutViewport.asValue(), result.applied)
+        assertTrue(result.reason.contains("déjà désactivé"))
+        assertTrue(result.reason.contains("Aucune commande"))
+        assertTrue(result.reason.contains("conservés"))
+        assertFalse(result.restorationAvailable)
+        result.validated()
+    }
+
+    @Test fun alreadyActiveReadbackKeepsTheObservedValuesAndCanConfirmAnIdempotentRequest() {
+        val requested = baseline.asValue()!!.copy(scale = 2.0005f)
+        val target = baseline.targetFor(requested)!!
+        val result = AndroidNativeVisionAdapter().confirmAlreadyAtTarget(requested, target, baseline, 5)!!
+        assertEquals(baseline.asValue(), result.applied)
+        assertEquals(requested, result.requested)
+        assertTrue(result.reason.contains("déjà au réglage demandé"))
+        assertTrue(result.provenance.contains("aucune commande envoyée"))
+        result.validated()
+    }
+
+    @Test fun noOpReceiptRequiresARestorableMatchingObservationAndTheSameRequestedOperation() {
+        val adapter = AndroidNativeVisionAdapter()
+        val requested = baseline.asValue()!!
+        assertNull(adapter.confirmAlreadyAtTarget(requested, baseline, baseline.copy(scale = 3f), 6))
+        assertNull(adapter.confirmAlreadyAtTarget(requested, baseline, baseline.copy(activationExact = false), 6))
+        assertNull(adapter.confirmAlreadyAtTarget(requested, inactiveWithoutViewport, inactiveWithoutViewport, 6))
+        assertNull(adapter.confirmAlreadyAtTarget(requested.copy(scale = Float.NaN), baseline, baseline, 6))
+        assertNull(adapter.confirmAlreadyAtTarget(requested.copy(mode = NativeMagnificationMode.FULLSCREEN), baseline, baseline, 6))
+    }
 }

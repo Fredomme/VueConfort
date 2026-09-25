@@ -33,10 +33,13 @@ data class NativeMagnificationSnapshot(
             (close(centerX, other.centerX, 1f) && close(centerY, other.centerY, 1f)))
     }
 
-    /** OFF may have no viewport. Only a requested ON can introduce an observed public viewport centre. */
+    /** User OFF keeps mode/scale preferences dormant; exact rollback uses saved snapshots directly. */
     fun targetFor(requested: NativeVisionValue.Magnification,
                   viewportCenter: Pair<Float, Float>? = null): NativeMagnificationSnapshot? {
         if (!restorable || !requested.isValidFor(NativeVisionCapability.MAGNIFICATION)) return null
+        // The public inactive state is unit scale; changing mode in an OFF command can be ignored.
+        // Do not move an inactive viewport or mistake the next ON preferences for effective OFF fields.
+        if (!requested.enabled) return copy(enabled = false, scale = 1f, centerX = null, centerY = null)
         val center = when {
             requested.centerX != null && requested.centerY != null -> requested.centerX to requested.centerY
             centerX != null && centerY != null -> centerX to centerY
@@ -67,6 +70,22 @@ class AndroidNativeVisionAdapter {
                                             before: NativeMagnificationSnapshot): NativeMagnificationSnapshot? =
         before.targetFor(requested, if (requested.enabled && requested.centerX == null && before.centerX == null)
             ScreenMagnifierService.nativeVisionViewportCenter() else null)
+
+    /** Pure receipt construction from a fresh reading; no controller method or system write. */
+    internal fun confirmAlreadyAtTarget(requested: NativeVisionValue.Magnification,
+                                        target: NativeMagnificationSnapshot,
+                                        observed: NativeMagnificationSnapshot,
+                                        profileRevision: Long): NativeVisionApplicationResult? {
+        if (!requested.isValidFor(NativeVisionCapability.MAGNIFICATION) || !target.matches(observed)) return null
+        val observedTarget = observed.targetFor(requested) ?: return null
+        if (!observedTarget.matches(target)) return null
+        return result(requested, NativeVisionApplicationStatus.APPLIED_AUTO, profileRevision,
+            if (!requested.enabled)
+                "Le grossissement est déjà désactivé et relu. Aucune commande n’a été envoyée ; le facteur et le mode choisis sont conservés pour la prochaine activation."
+            else "Le grossissement correspond déjà au réglage demandé et a été relu. Aucune commande n’a été envoyée.",
+            applied = observed.asValue()).copy(
+            provenance = "AccessibilityService.MagnificationController; état déjà conforme relu, aucune commande envoyée")
+    }
 
     suspend fun apply(
         request: NativeVisionRequestedState,
@@ -106,7 +125,11 @@ class AndroidNativeVisionAdapter {
         }
         if (target == null) return@withContext result(requested, NativeVisionApplicationStatus.NEEDS_USER_ACTION,
             profileRevision, "Le centre de la fenêtre Android n’est pas disponible. Aucune commande n’a été envoyée.")
-        setAndVerify(target, requested, profileRevision, restoring = false)
+        confirmAlreadyAtTarget(value, target, before, profileRevision)?.let { return@withContext it }
+        val result = setAndVerify(target, requested, profileRevision, restoring = false)
+        if (!value.enabled && result.status == NativeVisionApplicationStatus.APPLIED_AUTO) result.copy(
+            reason = "Le grossissement est désactivé et relu. Le facteur et le mode choisis sont conservés pour la prochaine activation.")
+        else result
     }
 
     /** Refuse to overwrite a setting subsequently changed using the loupe or Android. */

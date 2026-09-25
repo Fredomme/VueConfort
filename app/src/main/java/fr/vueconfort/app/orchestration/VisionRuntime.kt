@@ -87,9 +87,14 @@ object VisionRuntime {
 
     fun nativeValuesMatch(requested: NativeVisionValue, actual: NativeVisionValue?): Boolean = when {
         requested is NativeVisionValue.Magnification && actual is NativeVisionValue.Magnification ->
-            requested.enabled == actual.enabled && requested.mode == actual.mode && abs(requested.scale - actual.scale) <= .001f &&
-                (requested.centerX == null || (actual.centerX != null && abs(requested.centerX - actual.centerX) <= 1f)) &&
-                (requested.centerY == null || (actual.centerY != null && abs(requested.centerY - actual.centerY) <= 1f))
+            requested.isValidFor(NativeVisionCapability.MAGNIFICATION) && actual.isValidFor(NativeVisionCapability.MAGNIFICATION) &&
+                if (!requested.enabled) {
+                    // Only OFF is confirmed here. Scale/mode/centre preferences belong to the next ON;
+                    // journal restoration separately compares the exact saved controller snapshot.
+                    !actual.enabled && actual.scale == 1f
+                } else actual.enabled && requested.mode == actual.mode && abs(requested.scale - actual.scale) <= .001f &&
+                    (requested.centerX == null || (actual.centerX != null && abs(requested.centerX - actual.centerX) <= 1f)) &&
+                    (requested.centerY == null || (actual.centerY != null && abs(requested.centerY - actual.centerY) <= 1f))
         else -> requested == actual
     }
 

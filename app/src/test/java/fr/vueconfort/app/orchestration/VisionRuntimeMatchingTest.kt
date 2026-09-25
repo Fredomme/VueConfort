@@ -4,6 +4,14 @@ import fr.vueconfort.app.nativevision.NativeMagnificationMode
 import fr.vueconfort.app.nativevision.NativeVisionValue
 import fr.vueconfort.app.nativevision.ReluminoColor
 import fr.vueconfort.app.nativevision.ReluminoThickness
+import fr.vueconfort.app.nativevision.NativeVisionCapability
+import fr.vueconfort.app.nativevision.NativeVisionCapabilities
+import fr.vueconfort.app.nativevision.NativeVisionCapabilityState
+import fr.vueconfort.app.nativevision.NativeVisionAvailability
+import fr.vueconfort.app.nativevision.NativeVisionDevice
+import fr.vueconfort.app.nativevision.NativeVisionEngine
+import fr.vueconfort.app.nativevision.NativeVisionPresence
+import fr.vueconfort.app.nativevision.NativeVisionVariant
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -43,5 +51,49 @@ class VisionRuntimeMatchingTest {
         assertFalse(VisionRuntime.nativeValuesMatch(NativeVisionValue.Relumino(true), NativeVisionValue.Toggle(true)))
         assertFalse(VisionRuntime.nativeValuesMatch(NativeVisionValue.ExtraDim(true, 30), NativeVisionValue.ExtraDim(true, 31)))
         assertFalse(VisionRuntime.nativeValuesMatch(request, NativeVisionValue.FontScale(2f)))
+    }
+
+    @Test fun offReadbackConfirmsOnlyTheInactiveUnitScaleAndLeavesPreferencesDormant() {
+        val dormant = request.copy(enabled = false, mode = NativeMagnificationMode.WINDOW)
+        val inactive = NativeVisionValue.Magnification(false, 1f, null, null, NativeMagnificationMode.FULLSCREEN)
+        assertTrue(VisionRuntime.nativeValuesMatch(dormant, inactive))
+        assertTrue(VisionRuntime.nativeValuesMatch(dormant, inactive.copy(centerX = 540f, centerY = 1098f)))
+        assertFalse(VisionRuntime.nativeValuesMatch(dormant, inactive.copy(scale = 2f)))
+        assertFalse(VisionRuntime.nativeValuesMatch(dormant, inactive.copy(scale = 1.0001f)))
+        assertFalse(VisionRuntime.nativeValuesMatch(dormant, inactive.copy(enabled = true)))
+        assertFalse(VisionRuntime.nativeValuesMatch(dormant, inactive.copy(centerX = 540f)))
+        assertFalse(VisionRuntime.nativeValuesMatch(dormant.copy(scale = Float.NaN), inactive))
+        assertEquals(2f, dormant.scale, 0f)
+        assertEquals(NativeMagnificationMode.WINDOW, dormant.mode)
+    }
+
+    @Test fun reenablingRequiresTheSavedFactorModeAndExplicitCenterAgain() {
+        val dormant = request.copy(enabled = false, mode = NativeMagnificationMode.WINDOW)
+        val on = dormant.copy(enabled = true)
+        assertTrue(VisionRuntime.nativeValuesMatch(on, on.copy()))
+        assertFalse(VisionRuntime.nativeValuesMatch(on, NativeVisionValue.Magnification(false, 1f)))
+        assertFalse(VisionRuntime.nativeValuesMatch(on, on.copy(mode = NativeMagnificationMode.FULLSCREEN)))
+        assertFalse(VisionRuntime.nativeValuesMatch(on, on.copy(scale = 1f)))
+        assertFalse(VisionRuntime.nativeValuesMatch(on, on.copy(centerX = null, centerY = null)))
+    }
+
+    @Test fun aVerifiedOffReceiptNeverBecomesAnActiveEffectInTheOrchestrator() {
+        val capability = NativeVisionCapability.MAGNIFICATION
+        val dormant = request.copy(enabled = false, mode = NativeMagnificationMode.WINDOW)
+        assertTrue(VisionRuntime.nativeValuesMatch(dormant, NativeVisionValue.Magnification(false, 1f)))
+        val capabilities = NativeVisionCapabilities(device = NativeVisionDevice("samsung", "test", 36),
+            variant = NativeVisionVariant.COMMERCIAL, observedAtMillis = 100,
+            capabilities = mapOf(capability to NativeVisionCapabilityState(capability, NativeVisionPresence.PRESENT,
+                NativeVisionAvailability.AVAILABLE_PUBLIC, true, true, NativeVisionEngine.ANDROID_PUBLIC, "test", "available")))
+        val context = VisionExecutionContext("test", 1, 100, setOf(VisionTransport.ANDROID_NATIVE), capabilities)
+        val command = VisionRequest("off", EnginePayload.Native(capability, dormant), setOf(VisionTransport.ANDROID_NATIVE))
+        val engine = AndroidPublicVisionEngine()
+        val orchestrator = VisionOrchestrator(listOf(engine))
+        val plan = orchestrator.plan("profile", 1, context, listOf(command))
+        assertEquals(VisionPlanDisposition.APPLICABLE, plan.transformations.single().disposition)
+        val receipt = VisionApplicationReceipt("profile", 1, context, command, engine.descriptor.engineId,
+            engine.descriptor.version, VisionTransport.ANDROID_NATIVE, VisionReceiptStatus.VERIFIED_EXISTING,
+            VisionReceiptConfirmation.READ_BACK_CONFIRMED, 100, command.payload, "test off readback", "Grossissement désactivé.")
+        assertFalse(orchestrator.observe(plan, listOf(receipt), 100).anyActive)
     }
 }
