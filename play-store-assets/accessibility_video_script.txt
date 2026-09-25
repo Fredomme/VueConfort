@@ -1,18 +1,19 @@
-VIDÉO DE DÉMONSTRATION ACCESSIBILITY API — 45 À 60 SECONDES
+VIDÉO DE DÉMONSTRATION ACCESSIBILITY API — ENVIRON 90 SECONDES — VERSION 1.1.0
 
 Préparation
 - Filmer un Galaxy S25 réel en français, en portrait.
 - Activer l’affichage des pressions dans les options développeur.
 - Utiliser un compte et des contenus de démonstration sans information personnelle.
-- Publier la vidéo en mode non répertorié et conserver son URL pour Play Console.
+- Après autorisation distincte de publication, téléverser la vidéo en mode non répertorié et conserver son URL pour Play Console. La présente mission prépare seulement ce script.
+- Filmer la variante commerciale, sans privilège de laboratoire. Les fonctions Android doivent fonctionner sans ADB ; ADB peut seulement aider à installer ou diagnostiquer.
 
 00:00–00:05 — Ouverture
 Plan : ouvrir VueConfort depuis l’écran d’accueil, puis afficher l’accueil de l’application.
 Voix/texte : « VueConfort adapte localement le grossissement et la lecture pour améliorer le confort visuel. »
 
 00:05–00:15 — Divulgation préalable
-Plan : ouvrir la configuration guidée et rester sur l’étape “Service d’accessibilité”. Filmer le texte complet expliquant la barre, le grossissement, l’application active et le texte accessible demandé par Lire.
-Voix/texte : « Avant l’activation, VueConfort explique précisément les données accessibles et leur usage. Elles restent sur l’appareil et ne sont ni enregistrées ni partagées. »
+Plan : ouvrir Réglages, puis Autorisations, et rester sur la présentation du service d’accessibilité. Filmer le texte complet expliquant la barre, le grossissement, l’application active et le texte accessible demandé par Lire.
+Voix/texte : « Avant l’activation, VueConfort explique précisément les données accessibles et leur usage. Le texte demandé reste en mémoire ; vos préférences restent enregistrées localement. Aucun contenu n’est transmis. »
 
 00:15–00:23 — Consentement et activation
 Plan : toucher “Ouvrir les réglages d’accessibilité”, sélectionner VueConfort, afficher l’avertissement Android et accepter volontairement.
@@ -33,11 +34,14 @@ Voix/texte : « Le texte accessible est extrait uniquement à la demande pour ê
 
 00:51–00:58 — Limites et confidentialité
 Plan : afficher l’écran Confidentialité de VueConfort.
-Voix/texte : « VueConfort n’utilise ni capture d’écran, ni enregistrement, ni serveur, ni publicité, ni transmission de contenu. Certaines applications peuvent ne fournir aucun texte accessible. »
+Voix/texte : « La version commerciale ne capture pas les autres applications. Le contenu du lecteur n’est pas enregistré ni transmis. Les préférences et le bilan confirmé restent locaux. Certaines applications peuvent ne fournir aucun texte accessible. »
 
 00:58–01:00 — Fin
 Plan : logo VueConfort et adresse vueconfort.fr.
-Texte : « VueConfort — Votre écran s’adapte à vos yeux, pas l’inverse. »
+Texte : « VueConfort — Vos réglages de confort, sur votre téléphone. »
 
-PLAN DE REFUS À AJOUTER SI PLAY CONSOLE LE DEMANDE
+01:00–01:15 — REFUS ET PARCOURS SANS SERVICE
 Rejouer l’étape d’activation, choisir Annuler dans l’avertissement Android, puis montrer que l’application reste consultable et que les fonctions dépendantes du service sont signalées comme inactives.
+
+01:15–01:30 — ARRÊT ET RESTAURATION
+Montrer la restauration du grossissement automatiquement modifié puis la désactivation volontaire du service. Ne pas assimiler l’ouverture des réglages Samsung à l’activation d’un traitement. Si Relumino est présenté, filmer l’effet sur la dalle et préciser sa disponibilité selon le modèle ; une capture peut ne pas montrer ce traitement.

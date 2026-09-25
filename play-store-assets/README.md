@@ -1,6 +1,8 @@
-# Ressources Google Play — VueConfort 1.0.0
+# Ressources Google Play — VueConfort
 
-Ce dossier contient les ressources préparées pour Google Play Console à partir du logo officiel fourni le 4 août 2026 et de captures réelles réalisées le même jour sur un Galaxy S25 SM-S931B. Deux corrections purement visuelles ont été appliquées avant les captures ; aucun comportement métier n’a été modifié.
+Les textes et la checklist sont préparés pour 1.1.0. Les médias ci-dessous sont historiques et doivent être comparés au parcours final avant soumission. Aucune publication n’est réalisée.
+
+Ce dossier conserve les ressources préparées pour Google Play Console à partir du logo officiel fourni le 4 août 2026 et de captures réelles réalisées le même jour sur un Galaxy S25 SM-S931B. Deux corrections purement visuelles ont été appliquées avant les captures ; aucun comportement métier n’a été modifié.
 
 ## Icônes
 
@@ -35,7 +37,7 @@ La vidéo doit être filmée sur un Galaxy S25 réel, téléversée en mode non 
 
 Les dix PNG du dossier `screenshots/` proviennent exclusivement du Galaxy S25 SM-S931B connecté par ADB. Ils sont en français, non recadrés et conservent la définition native 1080 × 2340. Aucun mockup, texte injecté ou écran artificiel n’a été utilisé.
 
-La sélection recommandée pour la fiche Play Store est :
+La sélection historique, à renouveler avec les écrans finaux, est :
 
 1. `01_accueil.png` — accueil/tableau de bord ;
 2. `02_barre_flottante_chrome.png` — panneau `TYPE_ACCESSIBILITY_OVERLAY` dans Chrome ;

@@ -21,7 +21,7 @@ Le service ne clique, ne saisit et n’achète rien à la place de l’utilisate
 
 ## Choix et explications
 
-L’accueil explique les commandes, le grossissement, la détection de l’application active et la lecture sur demande avant l’ouverture des réglages Android. Un parcours sans activation reste possible. Mon affichage présente aussi l’usage du service avant son lien de configuration. La loupe peut être fermée et le service désactivé dans Android. Un consentement d’accessibilité ne donne pas à VueConfort un privilège Relumino : la voie commerciale utilise les écrans Samsung.
+La page Autorisations explique les commandes, le grossissement, la détection de l’application active et la lecture sur demande avant l’ouverture des réglages Android. Les entrées commerciales vers l’activation du service y conduisent. Un parcours sans activation reste possible ; le premier lancement ne demande pas ce service pour essayer l’Égaliseur ou importer un bilan. Mon affichage présente aussi cet usage avant son lien de configuration. La loupe peut être fermée et le service désactivé dans Android. Un consentement d’accessibilité ne donne pas à VueConfort un privilège Relumino : la voie commerciale utilise les écrans Samsung.
 
 ## Dossier Google Play
 
