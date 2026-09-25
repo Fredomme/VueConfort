@@ -1,35 +1,30 @@
 # Déclaration Accessibility API — VueConfort
 
-## Finalité
+Révision du 25 septembre 2026. Base factuelle à aligner sur le binaire Release soumis ; aucune approbation Google Play n’est déclarée ici.
 
-VueConfort est une application d’assistance visuelle destinée à améliorer temporairement le confort de lecture. Son service `ScreenMagnifierService` est une fonction principale, visible et déclenchée après activation volontaire dans les réglages Android.
+## Finalité et fonctions
 
-Dans cette déclaration, **Loupe VueConfort** désigne exclusivement le grossissement natif Android en mode fenêtre piloté par `MagnificationController`. Le prototype R&D par capture d’écran appartient uniquement au variant Debug et est absent du binaire Release soumis à Google Play.
+VueConfort propose des aides de confort de lecture. Le service `ScreenMagnifierService` est visible et activé volontairement dans Android. Il conserve :
 
-## Fonctions réalisées
+- les commandes flottantes et le lecteur avec `TYPE_ACCESSIBILITY_OVERLAY` ;
+- le grossissement natif `MagnificationController`, sans reconstruction de la loupe ;
+- la détection du package actif pour les règles de profil définies par l’utilisateur ;
+- la lecture de `rootInActiveWindow` seulement après l’action **Lire**, pour présenter localement le texte et les descriptions accessibles exposés par l’application courante.
 
-- afficher une barre et un lecteur au moyen de `TYPE_ACCESSIBILITY_OVERLAY`;
-- contrôler le grossissement Android avec `MagnificationController`;
-- détecter l’application active afin d’appliquer une règle de profil choisie par l’utilisateur;
-- parcourir `rootInActiveWindow` uniquement lorsque l’utilisateur appuie sur **Lire**, afin d’afficher localement le texte et les descriptions accessibles exposés par l’application courante.
+Le service écoute les événements de fenêtre, contenu et défilement. Native Vision réutilise son contrôleur pour le facteur, le centre, le mode et l’activation. Sa nouvelle orchestration exige Android 14+ et un état complet restaurable ; les commandes historiques restent présentes. Elle ne transforme pas le service en moyen d’écrire les réglages Samsung protégés.
 
-Le service écoute les changements de fenêtre, de contenu et de défilement. Il demande la capacité de récupérer le contenu de fenêtre et de contrôler le grossissement.
+## Limites et données
 
-## Ce que le service ne fait pas
+Les fonctions natives n’exigent aucune capture d’écran. Release et Aperçu n’embarquent ni MediaProjection, ni capture d’applications, ni OCR global. Le prototype historique de capture reste propre à Debug ; Lab Native Vision utilise le pont de loupe Release.
 
-- aucune activation automatique du service;
-- aucun clic, geste, saisie ou achat automatisé;
-- la Release n’embarque et n’utilise aucune capture d’écran, MediaProjection, OCR global ou enregistrement;
-- aucun contournement de `FLAG_SECURE` ou d’un écran protégé;
-- aucune collecte de mot de passe, frappe, message, contact ou contenu d’application;
-- aucun envoi réseau, serveur, publicité, analytique ou profilage commercial.
+Le service ne clique, ne saisit et n’achète rien à la place de l’utilisateur. Les règles existantes sont déterministes et choisies par l’utilisateur. **Lire** peut traiter un texte personnel que l’application courante expose à l’accessibilité ; ce texte reste en mémoire du service, sans sauvegarde dans DataStore ni envoi réseau. VueConfort ne contourne pas les fenêtres protégées ni l’absence de texte accessible. Les packages des règles et les préférences sont locaux ; aucun serveur, publicité ou analytique d’écran n’est ajouté.
 
-Le texte accessible est conservé seulement en mémoire pour le lecteur courant et n’est pas enregistré dans DataStore. Les noms de packages peuvent être comparés localement aux règles automatiques définies par l’utilisateur; ils ne sont pas transmis.
+## Choix et explications
 
-## Contrôle utilisateur
+L’accueil explique les commandes, le grossissement, la détection de l’application active et la lecture sur demande avant l’ouverture des réglages Android. Un parcours sans activation reste possible. Mon affichage présente aussi l’usage du service avant son lien de configuration. La loupe peut être fermée et le service désactivé dans Android. Un consentement d’accessibilité ne donne pas à VueConfort un privilège Relumino : la voie commerciale utilise les écrans Samsung.
 
-L’application explique l’usage pendant la configuration, ouvre la page officielle des réglages et vérifie l’état au retour. L’utilisateur peut réduire ou fermer les commandes, désactiver le service à tout moment, supprimer ses règles et désinstaller l’application.
+## Dossier Google Play
 
-## Éléments à fournir dans Play Console
+Le fichier de métadonnées actuel ne déclare pas `isAccessibilityTool`. Il faut préparer la déclaration correspondante, une information visible dans l’application et un consentement explicite ; la description système ou la politique seule ne suffit pas. La vidéo doit montrer le parcours d’information, acceptation/refus, activation et utilisation réelle. Tout changement d’usage doit être reflété dans la déclaration. L’éligibilité éventuelle comme outil d’accessibilité doit être justifiée par sa finalité et son public, pas supposée. [Règles officielles AccessibilityService](https://support.google.com/googleplay/android-developer/answer/10964491?hl=en), consultées le 25 septembre 2026.
 
-Utiliser cette déclaration comme base factuelle, compléter le formulaire AccessibilityService API et joindre une vidéo montrant l’activation manuelle, la barre, le grossissement et l’action Lire. Le texte final doit rester cohérent avec le binaire soumis.
+La recette doit vérifier chaque entrée vers Accessibilité, la possibilité de refuser et les textes FR/EN. Filmer la Release/Aperçu commerciale, jamais l’expérience Relumino privilégiée Lab comme démonstration du comportement client. Voir [Native Vision](NATIVE_VISION.md) et [préparation Play](PLAY_STORE_READINESS.md).
