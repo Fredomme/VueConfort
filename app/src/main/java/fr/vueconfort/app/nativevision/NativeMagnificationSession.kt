@@ -37,6 +37,8 @@ class NativeMagnificationSession(
             val existing = if (hasPendingRestoration()) runCatching { readJournal() }.getOrElse {
                 return@withContext listOf(failure(value, profileRevision, "Le journal précédent ne peut pas être vérifié. Aucune modification n’a été faite."))
             } else null
+            if (existing?.restoring == true) return@withContext listOf(failure(value, profileRevision,
+                "Une restauration est encore en cours. Terminez-la avant une nouvelle demande de grossissement."))
             if (existing != null && (existing.fingerprint != Build.FINGERPRINT ||
                     (!existing.expected.matches(current) && !existing.previousExpected.matches(current)))) {
                 return@withContext listOf(failure(value, profileRevision,
@@ -53,10 +55,21 @@ class NativeMagnificationSession(
             listOf(result.copy(restorationAvailable = true))
         } }
 
-    suspend fun restore(profileRevision: Long): NativeVisionRestorationOutcome = gate.withLock {
-        withContext(Dispatchers.Main.immediate) {
+    suspend fun restore(profileRevision: Long): NativeVisionRestorationOutcome = restoreGuarded(profileRevision)
+
+    /**
+     * Explicit recovery for an observed, interrupted OFF from an older journal. The normal path never
+     * adopts an arbitrary OFF as its own. The caller must provide the exact current raw observation.
+     */
+    suspend fun resumeRestoration(profileRevision: Long,
+                                  observedCurrent: NativeMagnificationSnapshot): NativeVisionRestorationOutcome =
+        restoreGuarded(profileRevision, observedCurrent)
+
+    private suspend fun restoreGuarded(profileRevision: Long,
+                                       explicitObservation: NativeMagnificationSnapshot? = null): NativeVisionRestorationOutcome =
+        gate.withLock { withContext(Dispatchers.Main.immediate) {
             if (!hasPendingRestoration()) return@withContext NativeVisionRestorationOutcome(true, false, emptyList())
-            val journal = runCatching { readJournal() }.getOrElse {
+            var journal = runCatching { readJournal() }.getOrElse {
                 return@withContext NativeVisionRestorationOutcome(false, true, listOf(failure(
                     NativeVisionValue.Magnification(false, 1f), profileRevision,
                     "Le journal de restauration n’est pas lisible. Aucun réglage n’a été imposé.",
@@ -66,27 +79,66 @@ class NativeMagnificationSession(
             if (journal.fingerprint != Build.FINGERPRINT) return@withContext NativeVisionRestorationOutcome(false, true, listOf(
                 failure(requested, profileRevision, "Android a été mis à jour depuis la sauvegarde. Le réglage actuel est conservé."),
             ))
-            val actual = adapter.readMagnificationState()
-            if (actual != null && journal.before.matches(actual)) {
-                val removed = keepCurrentState()
+            val initial = adapter.readMagnificationState()
+            if (explicitObservation != null && initial != explicitObservation) return@withContext NativeVisionRestorationOutcome(false, true,
+                listOf(failure(requested, profileRevision, "L’état a changé depuis l’observation de reprise. Aucun réglage n’a été imposé.")))
+            if (initial != null && journal.before.matches(initial)) {
+                val removed = discardJournalLocked()
                 return@withContext NativeVisionRestorationOutcome(removed, !removed, emptyList())
             }
-            val expected = if (actual != null && journal.previousExpected.matches(actual)) journal.previousExpected else journal.expected
-            val result = adapter.restoreMagnification(journal.before, expected, profileRevision)
-            val restored = result.status == NativeVisionApplicationStatus.APPLIED_AUTO
-            val removed = restored && keepCurrentState()
-            NativeVisionRestorationOutcome(restored && removed, !removed, listOf(result.copy(restorationAvailable = !removed)))
-        }
-    }
+            if (initial == null || !initial.restorable) return@withContext NativeVisionRestorationOutcome(false, true,
+                listOf(failure(requested, profileRevision, "Le contrôleur Android ne fournit pas un état restaurable. Le journal est conservé.")))
+            val owned = NativeMagnificationRestorePolicy.owns(initial, journal.expected, journal.previousExpected)
+            val explicitResume = explicitObservation != null && NativeMagnificationRestorePolicy.canResumeInactive(
+                journal.before, journal.expected, journal.previousExpected, explicitObservation, initial)
+            if (!owned && !explicitResume) return@withContext NativeVisionRestorationOutcome(false, true,
+                listOf(failure(requested, profileRevision, "Le grossissement a été modifié ailleurs. Une observation explicite est nécessaire avant de reprendre cet essai.")))
+
+            val results = mutableListOf<NativeVisionApplicationResult>()
+            var actual: NativeMagnificationSnapshot = initial
+            // At most one active mode transition, followed by the exact final snapshot.
+            repeat(2) {
+                val current = actual
+                val intermediate = NativeMagnificationRestorePolicy.requiresModeTransition(journal.before, current)
+                val target = if (intermediate) NativeMagnificationRestorePolicy.modeTransitionTarget(
+                    journal.before, current, listOf(journal.expected, journal.previousExpected)) else journal.before
+                if (target == null) return@withContext NativeVisionRestorationOutcome(false, true, results + failure(requested,
+                    profileRevision, "Aucun état actif observé ne permet de préparer le mode initial. Le journal est conservé."))
+                // Retain the original baseline and record BOTH permitted sides of this step before its command.
+                journal = journal.copy(expected = target, previousExpected = current, restoring = true)
+                if (!writeJournal(journal)) return@withContext NativeVisionRestorationOutcome(false, true, results + failure(requested,
+                    profileRevision, "Impossible de journaliser l’étape de restauration. Aucune nouvelle commande n’a été envoyée."))
+                val result = adapter.restoreMagnification(target, current, profileRevision, finalStep = !intermediate)
+                results += result.copy(restorationAvailable = true)
+                if (result.status != NativeVisionApplicationStatus.APPLIED_AUTO)
+                    return@withContext NativeVisionRestorationOutcome(false, true, results)
+                val after = adapter.readMagnificationState()
+                if (after == null || !target.matches(after)) return@withContext NativeVisionRestorationOutcome(false, true,
+                    results + failure(requested, profileRevision, "L’état a changé après l’étape de restauration. Le journal est conservé."))
+                actual = after
+                if (journal.before.matches(actual)) {
+                    val removed = discardJournalLocked()
+                    return@withContext NativeVisionRestorationOutcome(removed, !removed,
+                        results.map { it.copy(restorationAvailable = !removed) })
+                }
+            }
+            NativeVisionRestorationOutcome(false, true, results)
+        } }
 
     /** Only discards ownership; this action never writes to the Android controller. */
-    fun keepCurrentState(): Boolean = runCatching {
+    fun keepCurrentState(): Boolean {
+        if (!gate.tryLock()) return false
+        return try { discardJournalLocked() } finally { gate.unlock() }
+    }
+
+    /** The caller holds gate, including the successful restore path. */
+    private fun discardJournalLocked(): Boolean = runCatching {
         file.delete()
         !hasPendingRestoration()
     }.getOrDefault(false)
 
     private fun writeJournal(journal: Journal): Boolean {
-        val bytes = JSONObject().put("schema", 1).put("fingerprint", journal.fingerprint)
+        val bytes = JSONObject().put("schema", 2).put("fingerprint", journal.fingerprint).put("restoring", journal.restoring)
             .put("before", journal.before.toJson()).put("expected", journal.expected.toJson())
             .put("previousExpected", journal.previousExpected.toJson())
             .toString().toByteArray(Charsets.UTF_8)
@@ -98,9 +150,11 @@ class NativeMagnificationSession(
 
     private fun readJournal(): Journal {
         val root = JSONObject(file.openRead().use { it.readBytes().toString(Charsets.UTF_8) })
-        require(root.getInt("schema") == 1)
+        val schema = root.getInt("schema")
+        require(schema in 1..2)
         return Journal(fromJson(root.getJSONObject("before")), fromJson(root.getJSONObject("expected")),
-            fromJson(root.getJSONObject("previousExpected")), root.getString("fingerprint"))
+            fromJson(root.getJSONObject("previousExpected")), root.getString("fingerprint"),
+            restoring = if (schema == 2) root.getBoolean("restoring") else false)
     }
 
     private fun NativeMagnificationSnapshot.toJson(): JSONObject {
@@ -117,7 +171,8 @@ class NativeMagnificationSession(
         })
 
     private data class Journal(val before: NativeMagnificationSnapshot, val expected: NativeMagnificationSnapshot,
-                               val previousExpected: NativeMagnificationSnapshot, val fingerprint: String)
+                               val previousExpected: NativeMagnificationSnapshot, val fingerprint: String,
+                               val restoring: Boolean = false)
     private fun failure(value: NativeVisionValue, revision: Long, reason: String) = NativeVisionApplicationResult(
         capability = NativeVisionCapability.MAGNIFICATION, requested = value,
         status = NativeVisionApplicationStatus.REJECTED, engine = NativeVisionEngine.ANDROID_PUBLIC,
@@ -126,6 +181,30 @@ class NativeMagnificationSession(
         restorationAvailable = hasPendingRestoration(),
     )
     companion object { private val gate = Mutex() }
+}
+
+internal object NativeMagnificationRestorePolicy {
+    fun owns(current: NativeMagnificationSnapshot, expected: NativeMagnificationSnapshot,
+             previousExpected: NativeMagnificationSnapshot): Boolean = expected.matches(current) || previousExpected.matches(current)
+
+    fun canResumeInactive(before: NativeMagnificationSnapshot, expected: NativeMagnificationSnapshot,
+                          previousExpected: NativeMagnificationSnapshot, explicitObservation: NativeMagnificationSnapshot,
+                          current: NativeMagnificationSnapshot): Boolean =
+        explicitObservation == current && before.restorable && current.restorable && !before.enabled && !current.enabled &&
+            current.scale == before.scale && current.mode != before.mode &&
+            listOf(expected, previousExpected).any { it.restorable && it.enabled && it.mode == current.mode }
+
+    fun requiresModeTransition(before: NativeMagnificationSnapshot, current: NativeMagnificationSnapshot): Boolean =
+        !before.enabled && before.mode != current.mode
+
+    fun modeTransitionTarget(before: NativeMagnificationSnapshot, current: NativeMagnificationSnapshot,
+                             knownStates: List<NativeMagnificationSnapshot>): NativeMagnificationSnapshot? {
+        if (!before.restorable || !current.restorable || !requiresModeTransition(before, current)) return null
+        // Reuse a controller/session factor and recorded geometry, never an arbitrary fallback zoom level.
+        val active = (listOf(current) + knownStates).firstOrNull { it.enabled && it.restorable } ?: return null
+        return current.copy(enabled = true, mode = before.mode, scale = active.scale,
+            centerX = current.centerX ?: active.centerX, centerY = current.centerY ?: active.centerY).takeIf { it.restorable }
+    }
 }
 
 /** The journal's explicit nulls are distinct from a missing/corrupt field. Pure and independently testable. */

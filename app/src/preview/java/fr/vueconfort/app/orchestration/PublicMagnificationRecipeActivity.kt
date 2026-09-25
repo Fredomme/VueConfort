@@ -46,6 +46,10 @@ class PublicMagnificationRecipeActivity : ComponentActivity() {
             setOnClickListener { if (!running) lifecycleScope.launch { runLegacyRecipe() } }
         })
         layout.addView(Button(this).apply {
+            text = "Reprendre la restauration de l’essai"
+            setOnClickListener { if (!running) lifecycleScope.launch { resumeRecipeRestoration() } }
+        })
+        layout.addView(Button(this).apply {
             text = "Terminer et désactiver le service d’essai"
             setOnClickListener { if (!running && !NativeMagnificationSession(this@PublicMagnificationRecipeActivity).hasPendingRestoration()) {
                 fr.vueconfort.app.magnifier.ScreenMagnifierService.handleExternalAction(
@@ -154,6 +158,31 @@ class PublicMagnificationRecipeActivity : ComponentActivity() {
                     "Loupe habituelle vérifiée, état initial restauré." else "Vérification de la loupe non validée."
                 running = false
             }
+        }
+    }
+
+    /** Explicit recovery is restricted to the exact partial state recorded by this preview recipe. */
+    private suspend fun resumeRecipeRestoration() {
+        running = true
+        val report = JSONObject().put("recipe", "EXPLICIT_PUBLIC_RECIPE_RECOVERY")
+        try {
+            val interrupted = JSONObject(File(filesDir, "orchestrator-public-magnification.json").readText())
+            check(interrupted.optBoolean("pendingRestoration")) { "Aucune restauration interrompue enregistrée." }
+            val expected = requireNotNull(AndroidNativeVisionAdapter().readMagnificationState())
+            check(interrupted.getString("after") == expected.toString()) { "Le réglage a changé depuis l’essai ; reprise refusée." }
+            val outcome = withContext(NonCancellable) { NativeMagnificationSession(this@PublicMagnificationRecipeActivity)
+                .resumeRestoration(3, expected) }
+            report.put("success", outcome.success).put("pending", outcome.pending)
+                .put("after", AndroidNativeVisionAdapter().readMagnificationState()?.toString())
+                .put("reason", outcome.results.joinToString { it.reason })
+            status.text = if (outcome.success && !outcome.pending) "Restauration terminée, état initial retrouvé."
+                else "Restauration encore en attente."
+        } catch (failure: Exception) {
+            report.put("error", failure.message)
+            status.text = "Reprise refusée : ${failure.message}"
+        } finally {
+            File(filesDir, "orchestrator-public-recovery.json").writeText(report.toString(2))
+            running = false
         }
     }
 }

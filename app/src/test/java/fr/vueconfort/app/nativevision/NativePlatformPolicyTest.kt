@@ -186,4 +186,53 @@ class NativePlatformPolicyTest {
         assertFalse(offTarget.matches(inactiveWithoutViewport.copy(centerX = 20f)))
         assertFalse(offTarget.matches(inactiveWithoutViewport.copy(scale = 1.0001f)))
     }
+
+    private val appliedFullscreen = NativeMagnificationSnapshot(true, 1.8f, 540f, 1170f,
+        NativeMagnificationMode.FULLSCREEN, true)
+    private val interruptedInactiveFullscreen = NativeMagnificationSnapshot(false, 1f, 540f, 1098f,
+        NativeMagnificationMode.FULLSCREEN, true)
+
+    @Test fun interruptedOldOffIsNotSilentlyAdoptedAsAnOwnedState() {
+        assertFalse(NativeMagnificationRestorePolicy.owns(interruptedInactiveFullscreen,
+            appliedFullscreen, inactiveWithoutViewport))
+        assertTrue(NativeMagnificationRestorePolicy.canResumeInactive(inactiveWithoutViewport,
+            appliedFullscreen, inactiveWithoutViewport, interruptedInactiveFullscreen, interruptedInactiveFullscreen))
+        assertFalse(NativeMagnificationRestorePolicy.canResumeInactive(inactiveWithoutViewport,
+            appliedFullscreen, inactiveWithoutViewport, interruptedInactiveFullscreen,
+            interruptedInactiveFullscreen.copy(centerY = 1099f)))
+        assertFalse(NativeMagnificationRestorePolicy.canResumeInactive(inactiveWithoutViewport,
+            appliedFullscreen, inactiveWithoutViewport, interruptedInactiveFullscreen.copy(scale = 2f),
+            interruptedInactiveFullscreen.copy(scale = 2f)))
+    }
+
+    @Test fun restoreModeTransitionUsesTheRecordedFactorAndObservedCenterBeforeFinalOff() {
+        assertTrue(NativeMagnificationRestorePolicy.requiresModeTransition(inactiveWithoutViewport, interruptedInactiveFullscreen))
+        val transition = NativeMagnificationRestorePolicy.modeTransitionTarget(inactiveWithoutViewport,
+            interruptedInactiveFullscreen, listOf(appliedFullscreen, inactiveWithoutViewport))!!
+        assertEquals(NativeMagnificationMode.WINDOW, transition.mode)
+        assertEquals(1.8f, transition.scale!!, 0f)
+        assertEquals(540f, transition.centerX!!, 0f)
+        assertEquals(1098f, transition.centerY!!, 0f)
+        assertTrue(transition.enabled)
+        assertFalse(NativeMagnificationRestorePolicy.requiresModeTransition(inactiveWithoutViewport, transition))
+        // Each WAL step owns only its target and its actual predecessor, with the original baseline intact.
+        assertTrue(NativeMagnificationRestorePolicy.owns(transition, transition, interruptedInactiveFullscreen))
+        assertTrue(NativeMagnificationRestorePolicy.owns(interruptedInactiveFullscreen, transition, interruptedInactiveFullscreen))
+        assertFalse(NativeMagnificationRestorePolicy.owns(transition.copy(scale = 3f), transition, interruptedInactiveFullscreen))
+        val finalObserved = transition.copy(enabled = false, scale = 1f, centerX = null, centerY = null)
+        assertTrue(inactiveWithoutViewport.matches(finalObserved))
+        assertTrue(NativeMagnificationRestorePolicy.owns(finalObserved, inactiveWithoutViewport, transition))
+        assertFalse(inactiveWithoutViewport.matches(finalObserved.copy(mode = NativeMagnificationMode.FULLSCREEN)))
+    }
+
+    @Test fun normalActiveRestorePreparesModeWithoutAnArbitraryFactorOrGeometry() {
+        val transition = NativeMagnificationRestorePolicy.modeTransitionTarget(inactiveWithoutViewport,
+            appliedFullscreen, emptyList())!!
+        assertEquals(appliedFullscreen.copy(mode = NativeMagnificationMode.WINDOW), transition)
+        assertNull(NativeMagnificationRestorePolicy.modeTransitionTarget(inactiveWithoutViewport,
+            interruptedInactiveFullscreen, listOf(inactiveWithoutViewport)))
+        assertNull(NativeMagnificationRestorePolicy.modeTransitionTarget(inactiveWithoutViewport,
+            appliedFullscreen.copy(centerY = null), listOf(appliedFullscreen)))
+        assertFalse(NativeMagnificationRestorePolicy.requiresModeTransition(baseline, appliedFullscreen))
+    }
 }

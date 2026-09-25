@@ -114,6 +114,7 @@ class AndroidNativeVisionAdapter {
         before: NativeMagnificationSnapshot,
         expectedCurrent: NativeMagnificationSnapshot,
         profileRevision: Long,
+        finalStep: Boolean = true,
     ): NativeVisionApplicationResult = withContext(Dispatchers.Main.immediate) {
         val requested = before.asValue() ?: NativeVisionValue.Magnification(false, 1f)
         if (!before.restorable) return@withContext result(
@@ -128,7 +129,11 @@ class AndroidNativeVisionAdapter {
             requested, NativeVisionApplicationStatus.REJECTED, profileRevision,
             "Le grossissement a été modifié ailleurs. Votre nouveau réglage est conservé.",
         )
-        setAndVerify(before, requested, profileRevision, restoring = true)
+        val result = setAndVerify(before, requested, profileRevision, restoring = finalStep,
+            verificationAttempts = if (finalStep) 15 else 30)
+        if (!finalStep && result.status == NativeVisionApplicationStatus.APPLIED_AUTO) result.copy(
+            reason = "Le mode d’affichage initial a été préparé et relu ; la restauration n’est pas encore terminée.",
+            restorationAvailable = true) else result
     }
 
     private suspend fun setAndVerify(
@@ -136,13 +141,14 @@ class AndroidNativeVisionAdapter {
         requested: NativeVisionValue,
         revision: Long,
         restoring: Boolean,
+        verificationAttempts: Int = 15,
     ): NativeVisionApplicationResult {
         val accepted = runCatching {
             ScreenMagnifierService.applyNativeVisionMagnification(target)
         }.getOrDefault(false)
         if (!accepted) return result(requested, NativeVisionApplicationStatus.REJECTED, revision,
             "Android a refusé cette commande de grossissement.")
-        repeat(15) {
+        repeat(verificationAttempts) {
             val actual = readMagnificationState()
             if (actual != null && target.matches(actual)) return result(
                 requested, NativeVisionApplicationStatus.APPLIED_AUTO, revision,
