@@ -1,6 +1,8 @@
 package fr.vueconfort.app.equalizer
 
 import fr.vueconfort.app.model.OpticalPrescription
+import fr.vueconfort.app.nativevision.NativeVisionCodec
+import fr.vueconfort.app.nativevision.NativeVisionProfile
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
@@ -84,7 +86,8 @@ data class EqualizerProfile(
     val calculated: EqualizerCalculatedParameters? = null,
     val applied: EqualizerRenderRecord? = null,
     val provenance: EqualizerProvenance = EqualizerProvenance(),
-    val extensions: Map<String, String> = emptyMap()
+    val extensions: Map<String, String> = emptyMap(),
+    val nativeVision: NativeVisionProfile = NativeVisionProfile()
 ) {
     fun validated(): EqualizerProfile {
         require(schemaVersion == CURRENT_SCHEMA_VERSION) { "Version du profil non prise en charge." }
@@ -107,6 +110,7 @@ data class EqualizerProfile(
             checkParameters(it.parameters)
         }
         require(extensions.size <= 128 && extensions.all { (key, value) -> key.isNotBlank() && key.length <= 100 && value.length <= 4_096 })
+        nativeVision.validated()
         return copy(preferences = preferences.validated())
     }
 
@@ -114,7 +118,7 @@ data class EqualizerProfile(
         preferences == other.preferences && scene == other.scene && context == other.context && extensions == other.extensions
 
     companion object {
-        const val CURRENT_SCHEMA_VERSION = 1
+        const val CURRENT_SCHEMA_VERSION = 2
         const val PERSONAL_PROFILE_ID = "personal-equalizer"
     }
 }
@@ -135,6 +139,7 @@ object EqualizerProfileCodec {
         put("weight", p.preferences.fontWeight); put("intensity", p.preferences.intensity)
         put("distance", p.context.declaredDistanceCm); put("correctionWorn", p.context.correctionWorn)
         p.confirmedBilan?.let { put("bilan.updated", it.updatedAtMillis); put("bilan.source", it.source) }
+        put("nativeVision", NativeVisionCodec.encode(p.nativeVision))
         put("origin", p.provenance.origin); put("created", p.provenance.createdAtMillis); put("updated", p.provenance.updatedAtMillis)
         p.calculated?.let {
             put("computed.engine", it.engineVersion); put("computed.revision", it.sourceRevision); put("computed.origin", it.provenance)
@@ -165,9 +170,10 @@ object EqualizerProfileCodec {
             fun parameters(prefix: String) = fields.filterKeys { it.startsWith(prefix) }
                 .mapKeys { it.key.removePrefix(prefix) }.mapValues { it.value.toFloat() }
             val version = value("schema").toInt()
-            require(version == EqualizerProfile.CURRENT_SCHEMA_VERSION)
+            require(version in 1..EqualizerProfile.CURRENT_SCHEMA_VERSION)
             EqualizerProfile(
-                schemaVersion = version, id = value("id"), scene = EqualizerScene.valueOf(value("scene")), revision = value("revision").toLong(),
+                // A schema-1 record is migrated in memory only; opening the UI never overwrites it.
+                schemaVersion = EqualizerProfile.CURRENT_SCHEMA_VERSION, id = value("id"), scene = EqualizerScene.valueOf(value("scene")), revision = value("revision").toLong(),
                 preferences = EqualizerPreferences(
                     value("size").toFloat(), value("sharpness").toFloat(), value("contrast").toFloat(),
                     value("light").toFloat(), value("weight").toInt(), value("intensity").toFloat()
@@ -184,7 +190,9 @@ object EqualizerProfileCodec {
                         value("render.revision").toLong())
                 },
                 provenance = EqualizerProvenance(value("origin"), value("created").toLong(), value("updated").toLong()),
-                extensions = fields.filterKeys { it.startsWith("extension.") }.mapKeys { it.key.removePrefix("extension.") }
+                extensions = fields.filterKeys { it.startsWith("extension.") }.mapKeys { it.key.removePrefix("extension.") },
+                nativeVision = if (version == 1) NativeVisionProfile()
+                    else requireNotNull(NativeVisionCodec.decode(value("nativeVision")))
             ).validated()
         }.getOrNull()
     }

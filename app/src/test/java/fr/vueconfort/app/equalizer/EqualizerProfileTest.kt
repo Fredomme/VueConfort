@@ -58,7 +58,7 @@ class EqualizerProfileTest {
         assertNull(EqualizerProfileCodec.decode(encoded.substringBeforeLast('\n')))
         assertNull(EqualizerProfileCodec.decode(encoded + "\n" + encoded.lineSequence().first()))
         val unknown = encoded.lineSequence().map {
-            if (it.startsWith(base64("schema") + "=")) base64("schema") + "=" + base64("2") else it
+            if (it.startsWith(base64("schema") + "=")) base64("schema") + "=" + base64("999") else it
         }.joinToString("\n")
         assertNull(EqualizerProfileCodec.decode(unknown))
         assertNull(EqualizerProfileCodec.decode("!not-base64!=broken"))

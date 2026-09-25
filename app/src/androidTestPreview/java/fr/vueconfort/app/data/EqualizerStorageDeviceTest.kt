@@ -13,6 +13,7 @@ import fr.vueconfort.app.model.AssistProfile
 import fr.vueconfort.app.model.EyePrescription
 import fr.vueconfort.app.model.OpticalPrescription
 import fr.vueconfort.app.model.VisualProfile
+import fr.vueconfort.app.nativevision.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -123,6 +124,57 @@ class EqualizerStorageDeviceTest {
             val before = fixture.store.data.first().asMap()
             assertTrue(runCatching { fixture.repository.saveEqualizerProfile(EqualizerProfile()) }.isFailure)
             assertEquals(before, fixture.store.data.first().asMap())
+        } finally { fixture.close() }
+    }
+
+    @Test fun nativeUpdateAndStaleEqualizerSaveKeepBothIndependentSubsetsAcrossReopening() = runBlocking {
+        val fixture = Fixture()
+        try {
+            fixture.seedOtherFeatures()
+            val before = fixture.store.data.first().asMap()
+            val equalizer = fixture.repository.saveEqualizerProfile(EqualizerProfile(
+                preferences = EqualizerPreferences(sharpness = 0.31f), revision = 4,
+                applied = EqualizerRenderRecord("test", EqualizerRenderDecision.APPLY, emptyMap(), sourceRevision = 4)))
+            val request = NativeVisionRequestedState(mapOf(NativeVisionCapability.RELUMINO to
+                NativeVisionValue.Relumino(true, ReluminoThickness.FOUR, ReluminoColor.BLACK)), revision = 3, updatedAtMillis = 123)
+            val nativeSaved = fixture.repository.updateNativeVision { it.copy(enabled = true, requested = request,
+                restorationReferences = mapOf(NativeVisionCapability.RELUMINO to "lab-transaction-test")) }
+            assertEquals(equalizer.preferences, nativeSaved.preferences)
+            assertEquals(equalizer.revision, nativeSaved.revision)
+            assertEquals(equalizer.applied, nativeSaved.applied)
+            val staleSave = fixture.repository.saveEqualizerProfile(equalizer.copy(preferences = EqualizerPreferences(sharpness = 0.4f)))
+            assertEquals(request, staleSave.nativeVision.requested)
+            assertEquals(nativeSaved.nativeVision.restorationReferences, staleSave.nativeVision.restorationReferences)
+            fixture.reopen()
+            val reopened = fixture.repository.equalizerProfile.first()!!
+            assertEquals(staleSave, reopened)
+            assertEquals(before, fixture.store.data.first().asMap().filterKeys { it.name != "equalizer_profile_v1" })
+        } finally { fixture.close() }
+    }
+
+    @Test fun nativeUpdateDoesNotReplaceMalformedExistingProfile() = runBlocking {
+        val fixture = Fixture()
+        try {
+            fixture.store.edit { it[EQUALIZER_KEY] = "future-profile-unknown" }
+            assertTrue(runCatching { fixture.repository.updateNativeVision { NativeVisionProfile() } }.isFailure)
+            assertEquals("future-profile-unknown", fixture.store.data.first()[EQUALIZER_KEY])
+        } finally { fixture.close() }
+    }
+
+    @Test fun legacyProfileMigratesInMemoryAndOnlyExplicitWritePersistsSchemaTwo() = runBlocking {
+        val fixture = Fixture()
+        try {
+            fun encoded(value: String) = Base64.getUrlEncoder().withoutPadding().encodeToString(value.toByteArray())
+            val legacy = EqualizerProfileCodec.encode(EqualizerProfile(preferences = EqualizerPreferences(sharpness = 0.27f)))
+                .lineSequence().filterNot { it.startsWith(encoded("nativeVision") + "=") }
+                .map { if (it.startsWith(encoded("schema") + "=")) encoded("schema") + "=" + encoded("1") else it }.joinToString("\n")
+            fixture.store.edit { it[EQUALIZER_KEY] = legacy }
+            val migrated = fixture.repository.equalizerProfile.first()!!
+            assertEquals(2, migrated.schemaVersion)
+            assertEquals(legacy, fixture.store.data.first()[EQUALIZER_KEY])
+            fixture.repository.updateNativeVision { it.copy(enabled = true) }
+            assertNotEquals(legacy, fixture.store.data.first()[EQUALIZER_KEY])
+            assertEquals(0.27f, fixture.repository.equalizerProfile.first()!!.preferences.sharpness)
         } finally { fixture.close() }
     }
 

@@ -17,6 +17,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import fr.vueconfort.app.equalizer.ConfirmedBilanReference
 import fr.vueconfort.app.equalizer.EqualizerProfile
 import fr.vueconfort.app.equalizer.EqualizerProfileCodec
+import fr.vueconfort.app.nativevision.NativeVisionProfile
 import fr.vueconfort.app.model.AgeRange
 import fr.vueconfort.app.model.AssistProfile
 import fr.vueconfort.app.model.AmbientLightLevel
@@ -319,8 +320,8 @@ class VisualProfileRepository(
         var persisted: EqualizerProfile? = null
         dataStore.edit { preferences ->
             // Check inside the transaction as well as in the UI, including a change after the last read.
-            preferences[Keys.EQUALIZER_PROFILE]?.let { existing ->
-                require(EqualizerProfileCodec.decode(existing) != null) {
+            val existingProfile = preferences[Keys.EQUALIZER_PROFILE]?.let { existing ->
+                requireNotNull(EqualizerProfileCodec.decode(existing)) {
                     "Le profil existant n’est pas compatible. Il n’a pas été remplacé."
                 }
             }
@@ -331,6 +332,9 @@ class VisualProfileRepository(
                 confirmedBilan = reference,
                 calculated = if (referenceChanged) null else clean.calculated,
                 applied = if (referenceChanged) null else clean.applied,
+                // Native requests/receipts are committed independently. An old equalizer draft
+                // must never overwrite a newer command, confirmation or restoration reference.
+                nativeVision = existingProfile?.nativeVision ?: clean.nativeVision,
                 provenance = clean.provenance.copy(updatedAtMillis = System.currentTimeMillis())
             )
             preferences[Keys.EQUALIZER_PROFILE] = EqualizerProfileCodec.encode(saved)
@@ -338,6 +342,24 @@ class VisualProfileRepository(
             // Historical reader typography and loupe settings belong to other features and remain intact.
             preferences.remove(Keys.LEGACY_VISION_REFINEMENT)
             persisted = saved
+        }
+        return checkNotNull(persisted)
+    }
+
+    /** Atomically changes only the native subset of the same personal profile storage record. */
+    suspend fun updateNativeVision(transform: (NativeVisionProfile) -> NativeVisionProfile): EqualizerProfile {
+        var persisted: EqualizerProfile? = null
+        dataStore.edit { preferences ->
+            val profile = preferences[Keys.EQUALIZER_PROFILE]?.let { raw ->
+                requireNotNull(EqualizerProfileCodec.decode(raw)) {
+                    "Le profil existant n’est pas compatible. Il n’a pas été remplacé."
+                }
+            } ?: EqualizerProfile(confirmedBilan = ConfirmedBilanReference.from(
+                OpticalPrescriptionCodec.decode(preferences[Keys.OPTICAL_PRESCRIPTION])))
+            val updated = profile.copy(nativeVision = transform(profile.nativeVision).validated(),
+                provenance = profile.provenance.copy(updatedAtMillis = System.currentTimeMillis())).validated()
+            preferences[Keys.EQUALIZER_PROFILE] = EqualizerProfileCodec.encode(updated)
+            persisted = updated
         }
         return checkNotNull(persisted)
     }
