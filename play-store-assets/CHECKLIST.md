@@ -1,55 +1,38 @@
-# Checklist Google Play — VueConfort
+# Checklist Google Play — VueConfort 1.1.0
 
-## Binaire
+Révision du 25 septembre 2026. Liste de préparation, aucune soumission effectuée. Les cases non cochées demandent une vérification du binaire final ou de la console ; elles n’effacent pas les validations historiques de 1.0.x, qui ne prouvent pas l’état courant.
 
-- [x] AAB Release généré
-- [x] Signature locale valide
-- [x] Package `fr.vueconfort.app` vérifié
-- [x] Version 1.0.1 / code 2 vérifiée
-- [x] Lint Release sans erreur
-- [x] Tests unitaires réussis
-- [x] Test fermé Alpha 1.0.1 / code 2 actif pour les testeurs autorisés
-- [x] Play App Signing actif pour la version diffusée
+## Préparation dans le dépôt
 
-## Fiche Play Store
+- [x] Version de travail 1.1.0 / code 4 centralisée dans `gradle.properties`
+- [x] Package commercial `fr.vueconfort.app` conservé
+- [x] Signature locale optionnelle documentée, secrets exclus du dépôt
+- [x] Contrôle automatique du manifeste fusionné avant Release/AAB/lint
+- [x] Textes Store FR/EN alignés sur les fonctions et leurs domaines réels
+- [x] Déclarations Accessibility, Data Safety et politiques locales préparées
+- [x] Script de vidéo Accessibility mis à jour, avec parcours de refus
+- [x] Recette S25 de bout en bout définie dans `docs/PRODUCT_RELEASE_1_1_0.md`
 
-- [x] Icône Play Store 512 × 512 préparée
-- [x] Sources d’icône applicative préparées
-- [x] Feature Graphic 1024 × 500 préparée
-- [x] Icône officielle intégrée au binaire 1.0.1
-- [x] Captures d’écran téléphone réelles en français (Galaxy S25 SM-S931B)
-- [x] Texte court FR
-- [x] Description courte FR
-- [x] Description longue FR
-- [x] Nouveautés FR
-- [x] Texte court EN
-- [x] Description courte EN
-- [x] Description longue EN
-- [x] Nouveautés EN
-- [ ] Confirmer la catégorie Outils
-- [ ] Confirmer les tags proposés
+## Vérification du binaire final
 
-## Contenu et conformité
+Consulter le rapport final de l’intégration pour la compilation et les tests exécutés. L’AAB 1.1.0 préparé est **non signé** : aucune clé d’envoi n’est configurée localement. Il n’est pas soumissible en l’état ; un AAB généré n’est ni signé ni accepté par Play.
 
-- [ ] Classification du contenu complétée
-- [ ] Public cible complété
-- [ ] Déclaration sur les annonces : aucune annonce
-- [ ] Accès à l’application : aucun compte requis
-- [ ] Data Safety complété selon `docs/DATA_SAFETY.md`
-- [ ] Accessibility API déclarée
-- [x] Script de vidéo Accessibility préparé
-- [ ] Vidéo Accessibility filmée, téléversée et liée
-- [x] Politique de confidentialité publique FR
-- [x] Politique de confidentialité publique EN
-- [ ] Coordonnées développeur vérifiées dans Play Console
+- [ ] Configurer la clé d’envoi attendue par l’application Play, reconstruire puis vérifier l’AAB signé
+- [ ] Confirmer que le code 4 n’a jamais été envoyé à Play
+- [ ] Installer le binaire final signé depuis une piste de test
+- [ ] Vérifier veille One UI, grandes polices, lecteur d’écran et appareils annoncés
+- [ ] Vérifier les traductions de l’expérience anglaise
 
-## Tests et publication
+## Fiche et console
 
-- [x] Testeurs autorisés ajoutés à la piste fermée
-- [x] AAB 1.0.1 / code 2 importé et accepté
-- [x] Déploiement du test fermé Alpha actif
-- [ ] Installation et parcours complets depuis Google Play à poursuivre sur les appareils ciblés
-- [x] Test local Release : onboarding, notification, service, overlay, grossissement, lecteur et profils
-- [ ] Test verrouillage/déverrouillage et veille One UI
-- [ ] Test fermé si requis pour l’accès à la production
-- [ ] Publication production après validation
+- [ ] Actualiser les captures 1.0.x avec les vrais écrans 1.1.0
+- [ ] Vérifier l’icône et la Feature Graphic existantes dans les champs Play
+- [ ] Confirmer catégorie, tags, classification et public cible
+- [ ] Déclarer absence de compte et de publicité
+- [ ] Compléter Data Safety et la déclaration Santé selon les fonctions présentes
+- [ ] Compléter Accessibility API et joindre la vidéo réelle du parcours commercial
+- [ ] Vérifier les URL FR/EN déjà référencées et les contacts ; publier séparément les politiques actualisées si leur version en ligne diffère
+- [ ] Vérifier les exigences du compte et de la piste au moment du dépôt
+- [ ] Soumettre uniquement après une instruction distincte de publication
+
+Aucun statut de piste, d’acceptation d’AAB ou de Play App Signing n’a été consulté ni confirmé pendant cette intégration.

@@ -40,6 +40,8 @@ import fr.vueconfort.app.model.AmbientLightLevel
 import fr.vueconfort.app.model.AutomationRule
 import fr.vueconfort.app.model.AutomationStatus
 import fr.vueconfort.app.model.AutomationTrigger
+import fr.vueconfort.app.nativevision.NativeMagnificationMode
+import fr.vueconfort.app.nativevision.NativeMagnificationSnapshot
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
@@ -558,6 +560,61 @@ class ScreenMagnifierService : AccessibilityService() {
         magnificationEnabled = false
         VueConfortCoreState.magnificationActive = false
         showPersistentNotification()
+    }
+
+    /** Native Vision shares the historical controller; it never creates an overlay or saves a loupe profile. */
+    private fun readNativeVisionMagnification(): NativeMagnificationSnapshot? {
+        if (releasing) return null
+        return runCatching {
+            val controller = magnificationController
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val config = controller.magnificationConfig ?: return@runCatching null
+                NativeMagnificationSnapshot(
+                    enabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+                        config.isActivated else config.scale > 1f,
+                    scale = config.scale.takeIf { it.isFinite() },
+                    centerX = config.centerX.takeIf { it.isFinite() },
+                    centerY = config.centerY.takeIf { it.isFinite() },
+                    mode = when (config.mode) {
+                        MagnificationConfig.MAGNIFICATION_MODE_FULLSCREEN -> NativeMagnificationMode.FULLSCREEN
+                        MagnificationConfig.MAGNIFICATION_MODE_WINDOW -> NativeMagnificationMode.WINDOW
+                        else -> null
+                    },
+                    activationExact = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE,
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                NativeMagnificationSnapshot(
+                    enabled = controller.scale > 1f,
+                    scale = controller.scale.takeIf { it.isFinite() },
+                    centerX = controller.centerX.takeIf { it.isFinite() },
+                    centerY = controller.centerY.takeIf { it.isFinite() },
+                    mode = NativeMagnificationMode.FULLSCREEN, activationExact = false,
+                )
+            }
+        }.getOrNull()
+    }
+
+    private fun setNativeVisionMagnification(state: NativeMagnificationSnapshot): Boolean {
+        if (releasing || !state.restorable || Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return false
+        val builder = MagnificationConfig.Builder()
+            .setMode(if (state.mode == NativeMagnificationMode.WINDOW)
+                MagnificationConfig.MAGNIFICATION_MODE_WINDOW else MagnificationConfig.MAGNIFICATION_MODE_FULLSCREEN)
+            .setScale(state.scale!!).setActivated(state.enabled)
+        // An inactive controller can report no viewport. Do not invent or force coordinates on rollback.
+        state.centerX?.let { builder.setCenterX(it) }
+        state.centerY?.let { builder.setCenterY(it) }
+        val config = builder.build()
+        // No animation: the adapter checks the controller state before claiming application.
+        val accepted = magnificationController.setMagnificationConfig(config, false)
+        if (accepted) {
+            val actual = readNativeVisionMagnification()
+            magnificationEnabled = actual?.enabled ?: magnificationEnabled
+            VueConfortCoreState.magnificationActive = magnificationEnabled
+            stateLabelView?.text = if (magnificationEnabled) "Effet actif" else "Effet inactif"
+            showPersistentNotification()
+        }
+        return accepted
     }
 
     private fun releaseServiceResources() {
@@ -1080,5 +1137,21 @@ class ScreenMagnifierService : AccessibilityService() {
         fun handleExternalAction(action: String) {
             instance?.handleAction(action)
         }
+
+        fun nativeVisionControllerConnected(): Boolean = instance?.let { !it.releasing } == true
+
+        fun nativeVisionMagnificationSnapshot(): NativeMagnificationSnapshot? =
+            instance?.readNativeVisionMagnification()
+
+        /** Screen geometry from the same public window-bounds helper as the existing loupe. */
+        fun nativeVisionViewportCenter(): Pair<Float, Float>? = instance?.takeUnless { it.releasing }?.let { service ->
+            runCatching {
+                val (width, height) = service.windowBounds()
+                if (width > 0 && height > 0) width / 2f to height / 2f else null
+            }.getOrNull()
+        }
+
+        fun applyNativeVisionMagnification(state: NativeMagnificationSnapshot): Boolean =
+            instance?.setNativeVisionMagnification(state) ?: false
     }
 }

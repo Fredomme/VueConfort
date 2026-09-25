@@ -1,0 +1,7 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Isolated physical recipe: never packaged in release or the historical loupe. -->
+        <activity android:name="fr.vueconfort.app.orchestration.PublicMagnificationRecipeActivity"
+            android:exported="true" android:label="Vérification publique VueConfort" />
+    </application>
+</manifest>

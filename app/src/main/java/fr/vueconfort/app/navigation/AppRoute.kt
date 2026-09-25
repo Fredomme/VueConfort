@@ -6,6 +6,13 @@ sealed class AppRoute(
     data object Home :
         AppRoute("home")
 
+    data object Permissions : AppRoute("permissions")
+    data object ToolProfiles : AppRoute("tool_profiles")
+
+    data object NativeVision : AppRoute("native_vision")
+
+    data object Equalizer : AppRoute("equalizer")
+
     data object QuickReadingSetup :
         AppRoute("quick_reading_setup")
 
@@ -23,6 +30,9 @@ sealed class AppRoute(
 
     data object OpticalSettings :
         AppRoute("optical_settings")
+
+    data object OpticalPrescription :
+        AppRoute("optical_prescription")
 
     data object Reading :
         AppRoute("reading")

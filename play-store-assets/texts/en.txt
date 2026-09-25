@@ -2,46 +2,52 @@ TITLE
 VueConfort
 
 SHORT DESCRIPTION
-Adjust zoom, profiles and reading for visual comfort, entirely on-device.
+Personalise reading comfort, with or without a vision prescription.
 
 FULL DESCRIPTION
-Your screen adapts to your eyes, not the other way around.
+Adjust your display preferences at your own pace.
 
-VueConfort is an Android reading-comfort assistance app. It brings together clear, customisable controls designed to make text and phone interfaces easier to view.
+VueConfort brings your reading preferences together in a personal profile. Try it immediately, enter a correction you already know or import a vision prescription. No prescription or account is required.
 
-KEY FEATURES
+YOUR VISUAL PROFILE
+
+• Guided setup with or without a known correction
+• Local import of a prescription photo or PDF, with text recognition on your phone
+• Review and confirm each eye’s values before saving
+• Calibration and personal settings you can refine at any time
+
+REFINE THE PREVIEW
+
+Adjust size, sharpness, contrast, soft light, text weight and intensity. Compare different scenes with the Original image, then save your preferences. These effects appear in the VueConfort preview; they do not mean that every other app is being transformed.
+
+THE AIDS AVAILABLE ON YOUR PHONE
 
 • Android magnification and floating controls after you voluntarily enable the accessibility service
-• Customisable comfort profiles for different situations
-• Adapted reader using accessible text only when you choose Read
-• Guided display-preference calibration
-• On-screen visual screening tools with local history
-• On-device rules by app, time or ambient light
-• Size, contrast, spacing, appearance and magnification controls
+• Local accessible-text reader, only when you choose Read
+• Reading profiles and local rules for your needs
+• Guidance to available Android and Samsung settings, including Relumino outlines on supported devices
+• Status checks where supported, and restoration of settings changed automatically
 
-PRIVATE BY DESIGN
+Protected Samsung features remain under your control in the phone settings. VueConfort distinguishes available aids, those requiring your action and those not supported by your device.
 
-VueConfort works without an account, server, advertising or analytics. The app requests no Internet permission. Profiles, settings, calibrations and results remain in the device’s private app storage.
+YOUR DATA STAYS LOCAL
 
-The accessibility service displays the assistance bar, controls Android magnification, detects the active app for your local rules and extracts accessible text only when you request the Read feature. VueConfort does not capture the screen, record passwords or transmit content.
+No account, advertising or network transfer by the app. Confirmed prescription values, preferences and calibrations stay in private app storage. The selected image/PDF and recognised text are used for the import and then cleaned up; the original document remains under your control. You can delete your prescription and profile.
+
+The accessibility service displays controls, operates magnification, identifies the active app for your rules and reads accessible text only on request. The commercial version does not capture other apps’ screens or transmit their content.
 
 CLEAR LIMITS
 
-VueConfort does not correct eyesight or replace glasses. Its tests are on-screen screening tools: they provide no diagnosis, are not a prescription and do not replace an optician or ophthalmologist.
+VueConfort provides comfort aids; results vary by person and device. It does not replace glasses or an eye examination, diagnose a condition or issue a prescription. Importing a prescription does not guarantee optical correction across the whole screen.
 
-Some apps, images, videos, games, web pages or protected windows may expose no accessible text. VueConfort respects these limits and does not bypass Android protections.
+Some apps and protected windows expose no accessible text. VueConfort respects these limits. Android 9 or later; specific features vary by phone and Android version.
 
-Compatibility: Android 9 or later. Some system functions may vary by device manufacturer and Android version.
+WHAT’S NEW — VERSION 1.1.0
 
-WHAT’S NEW — VERSION 1.0.0
+Guided setup with or without a prescription, a central personal profile, local photo/PDF import with confirmation, a real-time visual equalizer and guided Android/Samsung aids. Application status and restoration are checked according to phone capabilities.
 
-First public VueConfort release: magnification and floating bar, customisable profiles, on-request local reader, calibration, visual screening with local history, guided setup and privacy controls.
-
-RECOMMENDED CATEGORY
-Tools
-
-RECOMMENDED TAGS
-Accessibility, Tools, Productivity
+PROPOSED CATEGORY
+Tools — to confirm in Play Console
 
 CONTACTS
 Support: support@vueconfort.fr

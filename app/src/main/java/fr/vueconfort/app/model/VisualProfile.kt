@@ -64,6 +64,7 @@ data class AssistProfile(
         const val LONG_READING_ID = "long_reading"
         const val OUTDOOR_ID = "outdoor"
         const val CUSTOM_ID = "custom"
+        const val MY_VISION_ID = "my_vision"
 
         fun defaults(now: Long = System.currentTimeMillis()) = listOf(
             AssistProfile(STANDARD_ID, "Standard", "Usage général", 1.5f, false, 0.72f, false, false, true, now),

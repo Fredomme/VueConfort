@@ -2,9 +2,13 @@
 
 VueConfort utilise une configuration de signature locale optionnelle. Aucune clé ni aucun secret ne doit être ajouté au dépôt.
 
-## 1. Créer la clé d’envoi
+État de l’intégration 1.1.0 : aucune configuration `keystore.properties` locale. L’AAB préparé est non signé, donc non soumissible. Les tests ne remplacent pas la configuration et la vérification de signature.
 
-Créer un dossier privé hors du dépôt, puis exécuter par exemple :
+## 1. Retrouver la clé d’envoi, ou la créer pour une première inscription
+
+Pour une application déjà enregistrée dans Play Console, utiliser sa clé d’envoi existante et vérifier son certificat dans la console. L’absence de clé sur ce poste ne signifie pas qu’il faut en créer une autre. Si la clé est perdue, suivre la récupération prévue par la console avant toute nouvelle soumission.
+
+Uniquement si aucune clé d’envoi n’existe encore pour cette application, créer un dossier privé hors du dépôt, puis exécuter par exemple :
 
 ```bash
 keytool -genkeypair -v \

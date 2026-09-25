@@ -40,7 +40,7 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profils visuels") },
+                title = { Text("Profils du lecteur et de la loupe") },
                 navigationIcon = {
                     OutlinedButton(onClick = onBack, modifier = Modifier.padding(start = 8.dp)) {
                         Text("Retour")
@@ -55,9 +55,9 @@ fun ProfileScreen(
         ) {
             item {
                 Button(onClick = onCreate, modifier = Modifier.fillMaxWidth()) {
-                    Text("Créer un profil utilisateur")
+                    Text("Créer un profil de lecture ou de loupe")
                 }
-                OutlinedButton(onClick = onOpticalSettings, modifier = Modifier.fillMaxWidth()) {
+                if (fr.vueconfort.app.BuildConfig.BUILD_TYPE == "debug" || fr.vueconfort.app.BuildConfig.NATIVE_VISION_LAB) OutlinedButton(onClick = onOpticalSettings, modifier = Modifier.fillMaxWidth()) {
                     Text("Réglages optiques expérimentaux")
                 }
             }
